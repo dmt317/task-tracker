@@ -67,17 +67,17 @@ func TestStorage_Add(t *testing.T) {
 		},
 	}
 
-	for name, tc := range tests {
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			s := tc.initMap
-			for i, task := range tc.inputTasks {
-				got := s.Add(task)
-				expected := tc.result[i]
-				if !errors.Is(got, expected) {
-					t.Fatalf("test-case: (%q); returned %q; expected %q", name, got, expected)
+			s := test.initMap
+			for i, task := range test.inputTasks {
+				gotErr := s.Add(task)
+				expectedErr := test.result[i]
+				if !errors.Is(gotErr, expectedErr) {
+					t.Fatalf("test-case: (%q); returned %q; expected %q", name, gotErr, expectedErr)
 				}
-				if got == nil {
+				if gotErr == nil {
 					currTask, err := s.Get(task.Id)
 					if err == nil && currTask == task {
 						fmt.Println(currTask)
