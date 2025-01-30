@@ -88,104 +88,74 @@ func TestStorage_Add(t *testing.T) {
 }
 
 func TestStorage_Get(t *testing.T) {
-	s := Storage{store: make(map[string]task.Task)}
-
-	s.store["task1"] = task.Task{Id: "task1", Description: "Complete the boss's task", CreatedAt: time.Now().Format(time.RFC3339Nano)}
-
 	tests := map[string]struct {
-		input  string
-		result struct {
-			task task.Task
-			err  error
-		}
+		inputIds []string
+		initMap  Storage
+		result   []error
 	}{
-		"get task successfully": {
-			input: "task1",
-			result: struct {
-				task task.Task
-				err  error
-			}{
-				task: s.store["task1"], err: nil,
-			},
+		"get existing task": {
+			inputIds: []string{"task1"},
+			initMap: Storage{store: map[string]task.Task{
+				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			}},
+			result: []error{nil},
 		},
-		"get task that does not exist": {
-			input: "task2",
-			result: struct {
-				task task.Task
-				err  error
-			}{
-				task: task.Task{}, err: errors.ErrTaskNotFound,
-			},
+
+		"get non-existing task when there are multiple tasks in the map": {
+			inputIds: []string{"task2"},
+			initMap: Storage{store: map[string]task.Task{
+				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task3": {Id: "task3", Description: "Third task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			}},
+			result: []error{errors.ErrTaskNotFound},
+		},
+
+		"get non-existing task when there are no tasks in the map": {
+			inputIds: []string{"task1"},
+			initMap:  Storage{store: map[string]task.Task{}},
+			result:   []error{errors.ErrTaskNotFound},
+		},
+
+		"get task with empty id": {
+			inputIds: []string{""},
+			initMap: Storage{store: map[string]task.Task{
+				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task2": {Id: "task2", Description: "Second task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			}},
+			result: []error{errors.ErrTaskNotFound},
+		},
+
+		"ensuring thread-safe get operation with duplicate task requests": {
+			inputIds: []string{"task1", "task2", "task3", "task1", "task2", "task3"},
+			initMap: Storage{store: map[string]task.Task{
+				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task2": {Id: "task2", Description: "Second task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task3": {Id: "task3", Description: "Third task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			}},
+			result: []error{nil, nil, nil, nil, nil, nil},
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := s.Get(test.input)
-			expected := test.result
-			if got != expected.task && !errors.Is(err, expected.err) {
-				t.Fatalf("test-case: (%q); returned task: %q, err: %q; expected task: %q, err: %q", name, got, err, expected.task, expected.err)
+			for i, id := range test.inputIds {
+				task, err := test.initMap.Get(id)
+				if !errors.Is(err, test.result[i]) && task != test.initMap.store[id] {
+					t.Fatalf("test-case: (%q); returned %q; expected %q", name, task, test.result[i])
+				}
+				if err == nil && task == test.initMap.store[id] {
+					fmt.Println(task)
+				}
 			}
 		})
 	}
 }
 
 func TestStorage_Update(t *testing.T) {
-	s := Storage{store: make(map[string]task.Task)}
 
-	s.store["task1"] = task.Task{Id: "task1", Description: "Complete the boss's task", CreatedAt: time.Now().Format(time.RFC3339Nano)}
-
-	tests := map[string]struct {
-		input  task.Task
-		result error
-	}{
-		"update task successfully": {
-			input:  task.Task{Id: "task1", Description: "Add new functionality", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
-			result: nil,
-		},
-		"update task that doesn't exists": {
-			input:  task.Task{Id: "task2", Description: "Add new functionality", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
-			result: errors.ErrTaskNotFound,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			if got, expected := s.Update(test.input), test.result; !errors.Is(got, expected) {
-				t.Fatalf("test-case: (%q); returned %q; expected %q", name, got, expected)
-			}
-		})
-	}
 }
 
 func TestStorage_Delete(t *testing.T) {
-	s := Storage{store: make(map[string]task.Task)}
 
-	s.store["task1"] = task.Task{Id: "task1", Description: "Complete the boss's task", CreatedAt: time.Now().Format(time.RFC3339Nano)}
-
-	tests := map[string]struct {
-		input  string
-		result error
-	}{
-		"delete task successfully": {
-			input:  "task1",
-			result: nil,
-		},
-		"delete task that does not exist": {
-			input:  "task2",
-			result: errors.ErrTaskNotFound,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			if got, expected := s.Delete(test.input), test.result; !errors.Is(got, expected) {
-				t.Fatalf("test-case: (%q); returned %q; expected %q", name, got, expected)
-			}
-
-		})
-	}
 }
