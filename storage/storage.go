@@ -8,7 +8,7 @@ import (
 
 type Storage struct {
 	store map[string]task.Task
-	mu    sync.RWMutex
+	mu    sync.Mutex
 }
 
 func (s *Storage) Delete(id string) error {
