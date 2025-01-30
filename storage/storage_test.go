@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"task-cli/errors"
 	"task-cli/task"
 	"testing"
@@ -8,29 +9,70 @@ import (
 )
 
 func TestStorage_Add(t *testing.T) {
-	s := Storage{store: make(map[string]task.Task)}
-
 	tests := map[string]struct {
-		input  task.Task
-		result error
+		inputTasks []task.Task
+		initMap    Storage
+		result     []error
 	}{
-		"add task successfully": {
-			input:  task.Task{Id: "task1", Description: "Complete the boss's task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
-			result: nil,
+		"add valid task": {
+			inputTasks: []task.Task{
+				{Id: "task1", Description: "Valid task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			},
+			initMap: Storage{store: make(map[string]task.Task)},
+			result:  []error{nil},
 		},
-		"add task that already exists": {
-			input:  task.Task{Id: "task1", Description: "Complete the boss's task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
-			result: errors.ErrTaskExists,
+
+		"add task with empty id": {
+			inputTasks: []task.Task{
+				{Id: "", Description: "No ID", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			},
+			initMap: Storage{store: make(map[string]task.Task)},
+			result:  []error{errors.ErrIdIsEmpty},
+		},
+
+		"add task with duplicate id": {
+			inputTasks: []task.Task{
+				{Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				{Id: "task1", Description: "Duplicate task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			},
+			initMap: Storage{store: map[string]task.Task{}},
+			result:  []error{nil, errors.ErrTaskExists},
+		},
+
+		"add task with empty description": {
+			inputTasks: []task.Task{
+				{Id: "task2", Description: "", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			},
+			initMap: Storage{store: make(map[string]task.Task)},
+			result:  []error{nil},
+		},
+
+		"add multiple valid tasks": {
+			inputTasks: []task.Task{
+				{Id: "task3", Description: "Task 3", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				{Id: "task4", Description: "Task 4", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				{Id: "task5", Description: "Task 5", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			},
+			initMap: Storage{store: make(map[string]task.Task)},
+			result:  []error{nil, nil, nil},
 		},
 	}
 
-	for name, test := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			if got, expected := s.Add(test.input), test.result; !errors.Is(got, expected) {
-				t.Fatalf("test-case: (%q); returned %q; expected %q", name, got, expected)
+			s := tc.initMap
+			for i, task := range tc.inputTasks {
+				got := s.Add(task)
+				expected := tc.result[i]
+				if !errors.Is(got, expected) {
+					t.Fatalf("test-case: (%q); returned %q; expected %q", name, got, expected)
+				}
+				if got == nil {
+					currTest, _ := s.Get(task.Id)
+					fmt.Println(currTest)
+				}
 			}
-
 		})
 	}
 }
