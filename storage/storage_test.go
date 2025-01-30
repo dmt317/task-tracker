@@ -1,9 +1,10 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
-	"task-cli/errors"
-	"task-cli/task"
+	"task-tracker/models"
+	"task-tracker/task"
 	"testing"
 	"time"
 )
@@ -27,7 +28,7 @@ func TestStorage_Add(t *testing.T) {
 				{Id: "", Description: "No ID", CreatedAt: time.Now().Format(time.RFC3339Nano)},
 			},
 			initMap: Storage{store: make(map[string]task.Task)},
-			result:  []error{errors.ErrIdIsEmpty},
+			result:  []error{models.ErrIdIsEmpty},
 		},
 
 		"add task with duplicate id": {
@@ -36,7 +37,7 @@ func TestStorage_Add(t *testing.T) {
 				{Id: "task1", Description: "Duplicate task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
 			},
 			initMap: Storage{store: map[string]task.Task{}},
-			result:  []error{nil, errors.ErrTaskExists},
+			result:  []error{nil, models.ErrTaskExists},
 		},
 
 		"add task with empty description": {
@@ -63,7 +64,7 @@ func TestStorage_Add(t *testing.T) {
 			},
 			initMap: Storage{store: map[string]task.Task{
 				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)}}},
-			result: []error{errors.ErrTaskExists},
+			result: []error{models.ErrTaskExists},
 		},
 	}
 
@@ -107,13 +108,13 @@ func TestStorage_Get(t *testing.T) {
 				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
 				"task3": {Id: "task3", Description: "Third task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
-			result: []error{errors.ErrTaskNotFound},
+			result: []error{models.ErrTaskNotFound},
 		},
 
 		"get non-existing task when there are no tasks in the map": {
 			inputIds: []string{"task1"},
 			initMap:  Storage{store: map[string]task.Task{}},
-			result:   []error{errors.ErrTaskNotFound},
+			result:   []error{models.ErrTaskNotFound},
 		},
 
 		"get task with empty id": {
@@ -122,7 +123,7 @@ func TestStorage_Get(t *testing.T) {
 				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
 				"task2": {Id: "task2", Description: "Second task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
-			result: []error{errors.ErrTaskNotFound},
+			result: []error{models.ErrTaskNotFound},
 		},
 
 		"ensuring thread-safe get operation with duplicate task requests": {
