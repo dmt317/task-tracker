@@ -1,15 +1,20 @@
 package storage
 
 import (
+	"sync"
 	"task-cli/errors"
 	"task-cli/task"
 )
 
 type Storage struct {
 	store map[string]task.Task
+	mu    sync.RWMutex
 }
 
 func (s *Storage) Delete(id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if _, found := s.store[id]; !found {
 		return errors.ErrTaskNotFound
 	}
@@ -20,6 +25,9 @@ func (s *Storage) Delete(id string) error {
 }
 
 func (s *Storage) Add(task task.Task) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if _, found := s.store[task.Id]; found {
 		return errors.ErrTaskExists
 	}
@@ -30,6 +38,9 @@ func (s *Storage) Add(task task.Task) error {
 }
 
 func (s *Storage) Update(task task.Task) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if _, found := s.store[task.Id]; !found {
 		return errors.ErrTaskNotFound
 	}
@@ -40,6 +51,9 @@ func (s *Storage) Update(task task.Task) error {
 }
 
 func (s *Storage) Get(id string) (task.Task, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if _, found := s.store[id]; !found {
 		return task.Task{}, errors.ErrTaskNotFound
 	}

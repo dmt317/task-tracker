@@ -30,6 +30,7 @@ func TestStorage_Add(t *testing.T) {
 			if got, expected := s.Add(test.input), test.result; !errors.Is(got, expected) {
 				t.Fatalf("test-case: (%q); returned %q; expected %q", name, got, expected)
 			}
+
 		})
 	}
 }
@@ -105,7 +106,6 @@ func TestStorage_Update(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestStorage_Delete(t *testing.T) {
@@ -133,6 +133,7 @@ func TestStorage_Delete(t *testing.T) {
 			if got, expected := s.Delete(test.input), test.result; !errors.Is(got, expected) {
 				t.Fatalf("test-case: (%q); returned %q; expected %q", name, got, expected)
 			}
+
 		})
 	}
 }
