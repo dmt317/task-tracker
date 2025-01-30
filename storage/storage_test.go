@@ -56,6 +56,15 @@ func TestStorage_Add(t *testing.T) {
 			initMap: Storage{store: make(map[string]task.Task)},
 			result:  []error{nil, nil, nil},
 		},
+
+		"add duplicate task when task already in storage": {
+			inputTasks: []task.Task{
+				{Id: "task1", Description: "Duplicate task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+			},
+			initMap: Storage{store: map[string]task.Task{
+				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)}}},
+			result: []error{errors.ErrTaskExists},
+		},
 	}
 
 	for name, tc := range tests {
@@ -69,8 +78,10 @@ func TestStorage_Add(t *testing.T) {
 					t.Fatalf("test-case: (%q); returned %q; expected %q", name, got, expected)
 				}
 				if got == nil {
-					currTest, _ := s.Get(task.Id)
-					fmt.Println(currTest)
+					currTask, err := s.Get(task.Id)
+					if err == nil && currTask == task {
+						fmt.Println(currTask)
+					}
 				}
 			}
 		})
