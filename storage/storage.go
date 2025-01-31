@@ -4,6 +4,7 @@ import (
 	"sync"
 	"task-tracker/models"
 	"task-tracker/task"
+	"time"
 )
 
 type Storage struct {
@@ -14,6 +15,10 @@ type Storage struct {
 func (s *Storage) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if id == "" {
+		return models.ErrIdIsEmpty
+	}
 
 	if _, found := s.store[id]; !found {
 		return models.ErrTaskNotFound
@@ -36,20 +41,31 @@ func (s *Storage) Add(task task.Task) error {
 		return models.ErrTaskExists
 	}
 
+	task.CreatedAt = time.Now().Format(time.RFC3339Nano)
+
 	s.store[task.Id] = task
 
 	return nil
 }
 
-func (s *Storage) Update(task task.Task) error {
+func (s *Storage) Update(updatedTask task.Task) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, found := s.store[task.Id]; !found {
+	if updatedTask.Id == "" {
+		return models.ErrIdIsEmpty
+	}
+
+	task, found := s.store[updatedTask.Id]
+
+	if !found {
 		return models.ErrTaskNotFound
 	}
 
-	s.store[task.Id] = task
+	task.Description = updatedTask.Description
+	task.UpdatedAt = time.Now().Format(time.RFC3339Nano)
+
+	s.store[updatedTask.Id] = task
 
 	return nil
 }
