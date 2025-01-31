@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+type TestResult struct {
+	resultTasks  []task.Task
+	resultErrors []error
+}
+
 func TestStorage_Add(t *testing.T) {
 	tests := map[string]struct {
 		inputTasks []task.Task
@@ -89,51 +94,75 @@ func TestStorage_Add(t *testing.T) {
 }
 
 func TestStorage_Get(t *testing.T) {
+	fixedTime := time.Now().Add(-time.Hour).Format(time.RFC3339Nano)
+
 	tests := map[string]struct {
 		inputIds []string
 		initMap  Storage
-		result   []error
+		result   TestResult
 	}{
 		"get existing task": {
 			inputIds: []string{"task1"},
 			initMap: Storage{store: map[string]task.Task{
-				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {Id: "task1", Description: "First task", CreatedAt: fixedTime},
 			}},
-			result: []error{nil},
+			result: TestResult{
+				resultTasks:  []task.Task{{Id: "task1", Description: "First task", CreatedAt: fixedTime}},
+				resultErrors: []error{nil},
+			},
 		},
 
 		"get non-existing task when there are multiple tasks in the map": {
 			inputIds: []string{"task2"},
 			initMap: Storage{store: map[string]task.Task{
-				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
-				"task3": {Id: "task3", Description: "Third task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {Id: "task1", Description: "First task", CreatedAt: fixedTime},
+				"task3": {Id: "task3", Description: "Third task", CreatedAt: fixedTime},
 			}},
-			result: []error{models.ErrTaskNotFound},
+			result: TestResult{
+				resultTasks:  []task.Task{{}},
+				resultErrors: []error{models.ErrTaskNotFound},
+			},
 		},
 
 		"get non-existing task when there are no tasks in the map": {
 			inputIds: []string{"task1"},
 			initMap:  Storage{store: map[string]task.Task{}},
-			result:   []error{models.ErrTaskNotFound},
+			result: TestResult{
+				resultTasks:  []task.Task{{}},
+				resultErrors: []error{models.ErrTaskNotFound},
+			},
 		},
 
 		"get task with empty id": {
 			inputIds: []string{""},
 			initMap: Storage{store: map[string]task.Task{
-				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
-				"task2": {Id: "task2", Description: "Second task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {Id: "task1", Description: "First task", CreatedAt: fixedTime},
+				"task2": {Id: "task2", Description: "Second task", CreatedAt: fixedTime},
 			}},
-			result: []error{models.ErrTaskNotFound},
+			result: TestResult{
+				resultTasks:  []task.Task{{}},
+				resultErrors: []error{models.ErrIdIsEmpty},
+			},
 		},
 
 		"ensuring thread-safe get operation with duplicate task requests": {
 			inputIds: []string{"task1", "task2", "task3", "task1", "task2", "task3"},
 			initMap: Storage{store: map[string]task.Task{
-				"task1": {Id: "task1", Description: "First task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
-				"task2": {Id: "task2", Description: "Second task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
-				"task3": {Id: "task3", Description: "Third task", CreatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {Id: "task1", Description: "First task", CreatedAt: fixedTime},
+				"task2": {Id: "task2", Description: "Second task", CreatedAt: fixedTime},
+				"task3": {Id: "task3", Description: "Third task", CreatedAt: fixedTime},
 			}},
-			result: []error{nil, nil, nil, nil, nil, nil},
+			result: TestResult{
+				resultTasks: []task.Task{
+					{Id: "task1", Description: "First task", CreatedAt: fixedTime},
+					{Id: "task2", Description: "Second task", CreatedAt: fixedTime},
+					{Id: "task3", Description: "Third task", CreatedAt: fixedTime},
+					{Id: "task1", Description: "First task", CreatedAt: fixedTime},
+					{Id: "task2", Description: "Second task", CreatedAt: fixedTime},
+					{Id: "task3", Description: "Third task", CreatedAt: fixedTime},
+				},
+				resultErrors: []error{nil, nil, nil, nil, nil, nil},
+			},
 		},
 	}
 
@@ -142,8 +171,10 @@ func TestStorage_Get(t *testing.T) {
 			t.Parallel()
 			for i, id := range test.inputIds {
 				task, err := test.initMap.Get(id)
-				if !errors.Is(err, test.result[i]) && task != test.initMap.store[id] {
-					t.Fatalf("test-case: (%q); returned %q; expected %q", name, task, test.result[i])
+				resultTask := test.result.resultTasks[i]
+				resultError := test.result.resultErrors[i]
+				if !errors.Is(err, resultError) || task != resultTask {
+					t.Fatalf("test-case: (%q); returned [%q %q]; expected [%q %q]", name, task, err, resultTask, resultError)
 				}
 				if err == nil && task == test.initMap.store[id] {
 					fmt.Println(task)
