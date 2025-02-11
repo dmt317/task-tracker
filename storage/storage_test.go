@@ -82,19 +82,24 @@ func TestStorage_Add(t *testing.T) {
 				if !errors.Is(gotErr, expectedErr) {
 					t.Fatalf("test-case: (%q); returned %q; expected %q", name, gotErr, expectedErr)
 				}
-				if gotErr == nil {
-					currTask, err := test.initMap.Get(task.Id)
-					if err == nil && currTask == task {
-						fmt.Println(currTask)
-					}
+
+				if gotErr != nil {
+					return
 				}
+
+				currTask, err := test.initMap.Get(task.Id)
+				if err != nil {
+					t.Fatalf("test-case: (%q); unexpected error: %q", name, err)
+				}
+
+				fmt.Println(currTask)
 			}
 		})
 	}
 }
 
 func TestStorage_Get(t *testing.T) {
-	fixedTime := time.Now().Add(-time.Hour).Format(time.RFC3339Nano)
+	fixedTime := time.Now().Format(time.RFC3339Nano)
 
 	tests := map[string]struct {
 		inputIds []string
@@ -145,7 +150,7 @@ func TestStorage_Get(t *testing.T) {
 			},
 		},
 
-		"ensuring thread-safe get operation with duplicate task requests": {
+		"get multiple tasks with duplicates": {
 			inputIds: []string{"task1", "task2", "task3", "task1", "task2", "task3"},
 			initMap: Storage{store: map[string]task.Task{
 				"task1": {Id: "task1", Description: "First task", CreatedAt: fixedTime},
@@ -175,9 +180,6 @@ func TestStorage_Get(t *testing.T) {
 				resultError := test.result.resultErrors[i]
 				if !errors.Is(err, resultError) || task != resultTask {
 					t.Fatalf("test-case: (%q); returned [%q %q]; expected [%q %q]", name, task, err, resultTask, resultError)
-				}
-				if err == nil && task == test.initMap.store[id] {
-					fmt.Println(task)
 				}
 			}
 		})
@@ -254,12 +256,21 @@ func TestStorage_Update(t *testing.T) {
 				if !errors.Is(err, result) {
 					t.Fatalf("test-case: (%q); returned [%q %q]", name, err, result)
 				}
-				if err == nil {
-					updatedTask, err := test.initMap.Get(task.Id)
-					if err == nil && updatedTask.Description == task.Description {
-						fmt.Println(updatedTask)
-					}
+
+				if err != nil {
+					return
 				}
+
+				updatedTask, err := test.initMap.Get(task.Id)
+				if err != nil {
+					t.Fatalf("test-case: (%q); unexpected error: %q", name, err)
+				}
+
+				if updatedTask.Description != task.Description {
+					t.Fatalf("test-case: (%q); task hasn't been updated; expected [%q]; got: [%q] ", name, task, updatedTask)
+				}
+
+				fmt.Println(updatedTask)
 			}
 		})
 	}
@@ -320,14 +331,17 @@ func TestStorage_Delete(t *testing.T) {
 				if !errors.Is(err, result) {
 					t.Fatalf("test-case: (%q); returned [%q %q]", name, err, result)
 				}
-				if err == nil {
-					_, err := test.initMap.Get(id)
-					if errors.Is(err, models.ErrTaskNotFound) {
-						fmt.Println("Task was deleted successfully")
-					}
+
+				if err != nil {
+					return
 				}
+
+				_, err = test.initMap.Get(id)
+				if !errors.Is(err, models.ErrTaskNotFound) {
+					t.Fatalf("test-case: (%q); task hasn't been deleted, get method return: %q", name, err)
+				}
+				fmt.Println("Task was deleted successfully")
 			}
 		})
 	}
-
 }

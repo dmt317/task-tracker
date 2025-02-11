@@ -42,6 +42,7 @@ func (s *Storage) Add(task task.Task) error {
 	}
 
 	task.CreatedAt = time.Now().Format(time.RFC3339Nano)
+	task.UpdatedAt = task.CreatedAt
 
 	s.store[task.Id] = task
 
