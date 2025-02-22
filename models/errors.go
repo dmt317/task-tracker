@@ -1,4 +1,4 @@
-package errors
+package models
 
 import (
 	"errors"
@@ -7,4 +7,5 @@ import (
 var (
 	ErrTaskExists   = errors.New("task already exists")
 	ErrTaskNotFound = errors.New("task not found")
+	ErrIdIsEmpty    = errors.New("id is empty")
 )
