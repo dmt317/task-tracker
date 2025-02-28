@@ -1,0 +1,6 @@
+linters:
+  enable:
+    - bodyclose
+    - exhaustruct
+    - goconst
+    - gofmt
