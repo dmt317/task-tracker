@@ -1,13 +1,14 @@
 .PHONY: build, run, test, lint
 
 build:
-	go build -o bin/main main.go
+	go build -o bin/main cmd/main.go
 
 run: build
 	./bin/main
 
 test:
-	go test ./storage/ -v -race -count=1
+	go test ./internal/storage/ -v -race -count=1
+	go test ./internal/config -v -count=1
 
 lint:
 	golangci-lint run --config=.golangci.yml
