@@ -1,7 +1,7 @@
 .PHONY: build, run, test, lint
 
 build:
-	go build -o bin/main cmd/main.go
+	go build -o bin/main cmd/server/main.go
 
 run: build
 	./bin/main

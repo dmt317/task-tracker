@@ -2,13 +2,21 @@ package storage
 
 import (
 	"sync"
-	"task-tracker/internal/models"
 	"time"
+
+	"task-tracker/internal/models"
 )
 
 type Storage struct {
 	store map[string]models.Task
 	mu    sync.Mutex
+}
+
+func NewStorage() *Storage {
+	return &Storage{
+		store: make(map[string]models.Task),
+		mu:    sync.Mutex{},
+	}
 }
 
 func (s *Storage) Delete(id string) error {
@@ -28,7 +36,7 @@ func (s *Storage) Delete(id string) error {
 	return nil
 }
 
-func (s *Storage) Add(task models.Task) error {
+func (s *Storage) Add(task *models.Task) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -43,7 +51,7 @@ func (s *Storage) Add(task models.Task) error {
 	task.CreatedAt = time.Now().Format(time.RFC3339Nano)
 	task.UpdatedAt = task.CreatedAt
 
-	s.store[task.Id] = task
+	s.store[task.Id] = *task
 
 	return nil
 }
@@ -62,10 +70,27 @@ func (s *Storage) Update(updatedTask models.Task) error {
 		return models.ErrTaskNotFound
 	}
 
-	task.Description = updatedTask.Description
-	task.UpdatedAt = time.Now().Format(time.RFC3339Nano)
+	updated := false
 
-	s.store[updatedTask.Id] = task
+	if updatedTask.Title != "" && updatedTask.Title != task.Title {
+		task.Title = updatedTask.Title
+		updated = true
+	}
+
+	if updatedTask.Description != "" && updatedTask.Description != task.Description {
+		task.Description = updatedTask.Description
+		updated = true
+	}
+
+	if updatedTask.Status != "" && updatedTask.Status != task.Status {
+		task.Status = updatedTask.Status
+		updated = true
+	}
+
+	if updated {
+		task.UpdatedAt = time.Now().Format(time.RFC3339Nano)
+		s.store[updatedTask.Id] = task
+	}
 
 	return nil
 }
@@ -83,4 +108,22 @@ func (s *Storage) Get(id string) (models.Task, error) {
 	}
 
 	return s.store[id], nil
+}
+
+func (s *Storage) GetAll() ([]models.Task, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.store == nil {
+		return nil, models.ErrStorageNotInitialized
+	}
+
+	tasks := make([]models.Task, len(s.store))
+	i := 0
+	for _, task := range s.store {
+		tasks[i] = task
+		i++
+	}
+
+	return tasks, nil
 }
