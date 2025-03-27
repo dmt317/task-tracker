@@ -27,7 +27,7 @@ func TestStorage_Add(t *testing.T) {
 	}{
 		"add valid task": {
 			inputTasks: []models.Task{
-				{Id: "task1", Title: "Title", Description: "Valid task", Status: "Todo"},
+				{ID: "task1", Title: "Title", Description: "Valid task", Status: "Todo"},
 			},
 			initMap: &Storage{store: make(map[string]models.Task)},
 			result:  []error{nil},
@@ -35,7 +35,7 @@ func TestStorage_Add(t *testing.T) {
 
 		"add task with empty id": {
 			inputTasks: []models.Task{
-				{Id: "", Title: "No ID", Description: "No ID", Status: "Todo"},
+				{ID: "", Title: "No ID", Description: "No ID", Status: "Todo"},
 			},
 			initMap: &Storage{store: make(map[string]models.Task)},
 			result:  []error{models.ErrIdIsEmpty},
@@ -43,8 +43,8 @@ func TestStorage_Add(t *testing.T) {
 
 		"add task with duplicate id": {
 			inputTasks: []models.Task{
-				{Id: "task1", Title: "Title", Description: "First task", Status: "Todo"},
-				{Id: "task1", Title: "Title", Description: "Duplicate task", Status: "Todo"},
+				{ID: "task1", Title: "Title", Description: "First task", Status: "Todo"},
+				{ID: "task1", Title: "Title", Description: "Duplicate task", Status: "Todo"},
 			},
 			initMap: &Storage{store: map[string]models.Task{}},
 			result:  []error{nil, models.ErrTaskExists},
@@ -52,7 +52,7 @@ func TestStorage_Add(t *testing.T) {
 
 		"add task with empty description": {
 			inputTasks: []models.Task{
-				{Id: "task2", Title: "Empty description", Description: "", Status: "Todo"},
+				{ID: "task2", Title: "Empty description", Description: "", Status: "Todo"},
 			},
 			initMap: &Storage{store: make(map[string]models.Task)},
 			result:  []error{nil},
@@ -60,9 +60,9 @@ func TestStorage_Add(t *testing.T) {
 
 		"add multiple valid tasks": {
 			inputTasks: []models.Task{
-				{Id: "task3", Title: "Task 3", Description: "Task 3", Status: "Todo"},
-				{Id: "task4", Title: "Task 4", Description: "Task 4", Status: "Todo"},
-				{Id: "task5", Title: "Task 5", Description: "Task 5", Status: "Todo"},
+				{ID: "task3", Title: "Task 3", Description: "Task 3", Status: "Todo"},
+				{ID: "task4", Title: "Task 4", Description: "Task 4", Status: "Todo"},
+				{ID: "task5", Title: "Task 5", Description: "Task 5", Status: "Todo"},
 			},
 			initMap: &Storage{store: make(map[string]models.Task)},
 			result:  []error{nil, nil, nil},
@@ -70,10 +70,10 @@ func TestStorage_Add(t *testing.T) {
 
 		"add duplicate task when task already in storage": {
 			inputTasks: []models.Task{
-				{Id: "task1", Title: "Duplicate task", Description: "Duplicate task", Status: "Todo"},
+				{ID: "task1", Title: "Duplicate task", Description: "Duplicate task", Status: "Todo"},
 			},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)}}},
+				"task1": {ID: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)}}},
 			result: []error{models.ErrTaskExists},
 		},
 	}
@@ -92,7 +92,7 @@ func TestStorage_Add(t *testing.T) {
 					return
 				}
 
-				currTask, err := test.initMap.Get(task.Id)
+				currTask, err := test.initMap.Get(task.ID)
 				if err != nil {
 					t.Fatalf("test-case: (%q); unexpected error: %q", name, err)
 				}
@@ -114,10 +114,10 @@ func TestStorage_Get(t *testing.T) {
 		"get existing task": {
 			inputIds: []string{"task1"},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task1": {ID: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
 			}},
 			result: TestResult_Get{
-				resultTasks:  []models.Task{{Id: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime}},
+				resultTasks:  []models.Task{{ID: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime}},
 				resultErrors: []error{nil},
 			},
 		},
@@ -125,8 +125,8 @@ func TestStorage_Get(t *testing.T) {
 		"get non-existing task when there are multiple tasks in the map": {
 			inputIds: []string{"task2"},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-				"task3": {Id: "task3", Title: "Third task", Description: "Third task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task1": {ID: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task3": {ID: "task3", Title: "Third task", Description: "Third task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
 			}},
 			result: TestResult_Get{
 				resultTasks:  []models.Task{{}},
@@ -146,8 +146,8 @@ func TestStorage_Get(t *testing.T) {
 		"get task with empty id": {
 			inputIds: []string{""},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-				"task2": {Id: "task2", Title: "Second task", Description: "Second task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task1": {ID: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task2": {ID: "task2", Title: "Second task", Description: "Second task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
 			}},
 			result: TestResult_Get{
 				resultTasks:  []models.Task{{}},
@@ -158,18 +158,18 @@ func TestStorage_Get(t *testing.T) {
 		"get multiple tasks with duplicates": {
 			inputIds: []string{"task1", "task2", "task3", "task1", "task2", "task3"},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-				"task2": {Id: "task2", Title: "Second task", Description: "Second task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-				"task3": {Id: "task3", Title: "Third task", Description: "Third task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task1": {ID: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task2": {ID: "task2", Title: "Second task", Description: "Second task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task3": {ID: "task3", Title: "Third task", Description: "Third task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
 			}},
 			result: TestResult_Get{
 				resultTasks: []models.Task{
-					{Id: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-					{Id: "task2", Title: "Second task", Description: "Second task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-					{Id: "task3", Title: "Third task", Description: "Third task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-					{Id: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-					{Id: "task2", Title: "Second task", Description: "Second task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-					{Id: "task3", Title: "Third task", Description: "Third task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task2", Title: "Second task", Description: "Second task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task3", Title: "Third task", Description: "Third task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task1", Title: "First task", Description: "First task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task2", Title: "Second task", Description: "Second task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task3", Title: "Third task", Description: "Third task", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
 				},
 				resultErrors: []error{nil, nil, nil, nil, nil, nil},
 			},
@@ -179,8 +179,8 @@ func TestStorage_Get(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			for i, id := range test.inputIds {
-				task, err := test.initMap.Get(id)
+			for i, ID := range test.inputIds {
+				task, err := test.initMap.Get(ID)
 				resultTask := test.result.resultTasks[i]
 				resultError := test.result.resultErrors[i]
 				if !errors.Is(err, resultError) || task != resultTask {
@@ -199,54 +199,54 @@ func TestStorage_Update(t *testing.T) {
 	}{
 		"update existing task": {
 			inputTasks: []models.Task{
-				{Id: "task1", Title: "New title", Description: "New description", Status: "Done"},
+				{ID: "task1", Title: "New title", Description: "New description", Status: "Done"},
 			},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
 			result: []error{nil},
 		},
 
 		"update non-existing task": {
 			inputTasks: []models.Task{
-				{Id: "task2", Title: "New title", Description: "New description", Status: "Done"},
+				{ID: "task2", Title: "New title", Description: "New description", Status: "Done"},
 			},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
 			result: []error{models.ErrTaskNotFound},
 		},
 
 		"update task with empty id": {
 			inputTasks: []models.Task{
-				{Id: "", Title: "New title", Description: "New description", Status: "Done"},
+				{ID: "", Title: "New title", Description: "New description", Status: "Done"},
 			},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
 			result: []error{models.ErrIdIsEmpty},
 		},
 
 		"update multiple tasks": {
 			inputTasks: []models.Task{
-				{Id: "task1", Title: "New title", Description: "New description", Status: "Done"},
-				{Id: "task2", Title: "New title", Description: "New description", Status: "Done"},
-				{Id: "task3", Title: "New title", Description: "New description", Status: "Done"},
+				{ID: "task1", Title: "New title", Description: "New description", Status: "Done"},
+				{ID: "task2", Title: "New title", Description: "New description", Status: "Done"},
+				{ID: "task3", Title: "New title", Description: "New description", Status: "Done"},
 			},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
-				"task2": {Id: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
-				"task3": {Id: "task3", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task2": {ID: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task3": {ID: "task3", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
 			result: []error{nil, nil, nil},
 		},
 
 		"update task using the same data": {
 			inputTasks: []models.Task{
-				{Id: "task1", Title: "Title", Description: "Description", Status: "Todo"},
+				{ID: "task1", Title: "Title", Description: "Description", Status: "Todo"},
 			},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
 			result: []error{nil},
 		},
@@ -266,7 +266,7 @@ func TestStorage_Update(t *testing.T) {
 					return
 				}
 
-				updatedTask, err := test.initMap.Get(task.Id)
+				updatedTask, err := test.initMap.Get(task.ID)
 				if err != nil {
 					t.Fatalf("test-case: (%q); unexpected error: %q", name, err)
 				}
@@ -290,7 +290,7 @@ func TestStorage_Delete(t *testing.T) {
 		"delete existing task": {
 			inputIds: []string{"task1"},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
 			result: []error{nil},
 		},
@@ -303,8 +303,8 @@ func TestStorage_Delete(t *testing.T) {
 		"delete non-existing task when there are some tasks in the map": {
 			inputIds: []string{"task1"},
 			initMap: &Storage{store: map[string]models.Task{
-				"task2": {Id: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
-				"task3": {Id: "task3", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task2": {ID: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task3": {ID: "task3", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
 			result: []error{models.ErrTaskNotFound},
 		},
@@ -312,7 +312,7 @@ func TestStorage_Delete(t *testing.T) {
 		"delete task with empty id": {
 			inputIds: []string{""},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
 			result: []error{models.ErrIdIsEmpty},
 		},
@@ -320,8 +320,8 @@ func TestStorage_Delete(t *testing.T) {
 		"delete multiple tasks": {
 			inputIds: []string{"task1", "task2"},
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
-				"task2": {Id: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
+				"task2": {ID: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
 			result: []error{nil, nil},
 		},
@@ -330,8 +330,8 @@ func TestStorage_Delete(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			for i, id := range test.inputIds {
-				err := test.initMap.Delete(id)
+			for i, ID := range test.inputIds {
+				err := test.initMap.Delete(ID)
 				result := test.result[i]
 				if !errors.Is(err, result) {
 					t.Fatalf("test-case: (%q); returned [%q %q]", name, err, result)
@@ -341,7 +341,7 @@ func TestStorage_Delete(t *testing.T) {
 					return
 				}
 
-				_, err = test.initMap.Get(id)
+				_, err = test.initMap.Get(ID)
 				if !errors.Is(err, models.ErrTaskNotFound) {
 					t.Fatalf("test-case: (%q); task hasn't been deleted, get method return: %q", name, err)
 				}
@@ -360,15 +360,15 @@ func TestStorage_GetAll(t *testing.T) {
 	}{
 		"get all tasks when storage has multiple tasks": {
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-				"task2": {Id: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-				"task3": {Id: "task3", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task2": {ID: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task3": {ID: "task3", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
 			}},
 			result: TestResult_GetAll{
 				resultTasks: []models.Task{
-					{Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-					{Id: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
-					{Id: "task3", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task2", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task3", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
 				},
 				resultError: nil,
 			},
@@ -384,11 +384,11 @@ func TestStorage_GetAll(t *testing.T) {
 
 		"get all tasks when storage has one task": {
 			initMap: &Storage{store: map[string]models.Task{
-				"task1": {Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
 			}},
 			result: TestResult_GetAll{
 				resultTasks: []models.Task{
-					{Id: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
+					{ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: fixedTime, UpdatedAt: fixedTime},
 				},
 				resultError: nil,
 			},
@@ -420,7 +420,7 @@ func TestStorage_GetAll(t *testing.T) {
 			}
 
 			for _, expectedTask := range resultTasks {
-				actualTask, found := test.initMap.store[expectedTask.Id]
+				actualTask, found := test.initMap.store[expectedTask.ID]
 				if !found || expectedTask != actualTask {
 					t.Fatalf("test-case: %q; expected task %v, got %v", name, expectedTask, actualTask)
 				}

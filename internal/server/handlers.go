@@ -31,7 +31,6 @@ func (s *HttpServer) handleTaskById(w http.ResponseWriter, r *http.Request) {
 	default:
 		s.handleError(w, http.StatusMethodNotAllowed, r.RemoteAddr, models.ErrMethodNotAllowed)
 	}
-
 }
 
 func (s *HttpServer) handleGetAllTasks(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +58,7 @@ func (s *HttpServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	task.Id = uuid.New().String()
+	task.ID = uuid.New().String()
 
 	if err := s.storage.Add(&task); err != nil {
 		s.processStorageError(w, r.RemoteAddr, err)
@@ -115,7 +114,7 @@ func (s *HttpServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	task.Id = taskID
+	task.ID = taskID
 
 	if err := s.storage.Update(task); err != nil {
 		s.processStorageError(w, r.RemoteAddr, err)
@@ -123,7 +122,6 @@ func (s *HttpServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-
 }
 
 func (s *HttpServer) handleError(w http.ResponseWriter, statusCode int, ip string, err error) {

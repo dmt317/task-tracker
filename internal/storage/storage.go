@@ -19,19 +19,19 @@ func NewStorage() *Storage {
 	}
 }
 
-func (s *Storage) Delete(id string) error {
+func (s *Storage) Delete(ID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if id == "" {
+	if ID == "" {
 		return models.ErrIdIsEmpty
 	}
 
-	if _, found := s.store[id]; !found {
+	if _, found := s.store[ID]; !found {
 		return models.ErrTaskNotFound
 	}
 
-	delete(s.store, id)
+	delete(s.store, ID)
 
 	return nil
 }
@@ -40,18 +40,18 @@ func (s *Storage) Add(task *models.Task) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if task.Id == "" {
+	if task.ID == "" {
 		return models.ErrIdIsEmpty
 	}
 
-	if _, found := s.store[task.Id]; found {
+	if _, found := s.store[task.ID]; found {
 		return models.ErrTaskExists
 	}
 
 	task.CreatedAt = time.Now().Format(time.RFC3339Nano)
 	task.UpdatedAt = task.CreatedAt
 
-	s.store[task.Id] = *task
+	s.store[task.ID] = *task
 
 	return nil
 }
@@ -60,11 +60,11 @@ func (s *Storage) Update(updatedTask models.Task) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if updatedTask.Id == "" {
+	if updatedTask.ID == "" {
 		return models.ErrIdIsEmpty
 	}
 
-	task, found := s.store[updatedTask.Id]
+	task, found := s.store[updatedTask.ID]
 
 	if !found {
 		return models.ErrTaskNotFound
@@ -89,25 +89,25 @@ func (s *Storage) Update(updatedTask models.Task) error {
 
 	if updated {
 		task.UpdatedAt = time.Now().Format(time.RFC3339Nano)
-		s.store[updatedTask.Id] = task
+		s.store[updatedTask.ID] = task
 	}
 
 	return nil
 }
 
-func (s *Storage) Get(id string) (models.Task, error) {
+func (s *Storage) Get(ID string) (models.Task, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if id == "" {
+	if ID == "" {
 		return models.Task{}, models.ErrIdIsEmpty
 	}
 
-	if _, found := s.store[id]; !found {
+	if _, found := s.store[ID]; !found {
 		return models.Task{}, models.ErrTaskNotFound
 	}
 
-	return s.store[id], nil
+	return s.store[ID], nil
 }
 
 func (s *Storage) GetAll() ([]models.Task, error) {
