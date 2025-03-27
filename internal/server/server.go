@@ -28,8 +28,8 @@ func NewHttpServer(config config.Config) *HttpServer {
 }
 
 func (s *HttpServer) setupRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/task", s.handleTasks)
-	mux.HandleFunc("/task/", s.handleTaskById)
+	mux.HandleFunc("/tasks", s.handleTasks)
+	mux.HandleFunc("/tasks/{id}", s.handleTaskById)
 }
 
 func (s *HttpServer) StartHttpServer() {
