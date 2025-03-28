@@ -6,10 +6,9 @@ import (
 
 var (
 	// Storage errors
-	ErrTaskExists            = errors.New("task already exists")
-	ErrTaskNotFound          = errors.New("task not found")
-	ErrIDIsEmpty             = errors.New("id is empty")
-	ErrStorageNotInitialized = errors.New("storage is not initialized")
+	ErrTaskExists   = errors.New("task already exists")
+	ErrTaskNotFound = errors.New("task not found")
+	ErrIDIsEmpty    = errors.New("id is empty")
 
 	// HTTP server errors
 	ErrMethodNotAllowed = errors.New("method not allowed")

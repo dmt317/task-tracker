@@ -114,10 +114,6 @@ func (s *Storage) GetAll() ([]models.Task, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.store == nil {
-		return nil, models.ErrStorageNotInitialized
-	}
-
 	tasks := make([]models.Task, len(s.store))
 	i := 0
 	for _, task := range s.store {

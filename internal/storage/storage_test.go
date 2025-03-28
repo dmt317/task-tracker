@@ -393,14 +393,6 @@ func TestStorage_GetAll(t *testing.T) {
 				resultError: nil,
 			},
 		},
-
-		"get all tasks when store map is nil": {
-			initMap: &Storage{store: nil},
-			result: TestResult_GetAll{
-				resultTasks: nil,
-				resultError: models.ErrStorageNotInitialized,
-			},
-		},
 	}
 
 	for name, test := range tests {
