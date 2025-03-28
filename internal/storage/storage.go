@@ -19,19 +19,19 @@ func NewStorage() *Storage {
 	}
 }
 
-func (s *Storage) Delete(ID string) error {
+func (s *Storage) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if ID == "" {
+	if id == "" {
 		return models.ErrIdIsEmpty
 	}
 
-	if _, found := s.store[ID]; !found {
+	if _, found := s.store[id]; !found {
 		return models.ErrTaskNotFound
 	}
 
-	delete(s.store, ID)
+	delete(s.store, id)
 
 	return nil
 }
@@ -95,19 +95,19 @@ func (s *Storage) Update(updatedTask models.Task) error {
 	return nil
 }
 
-func (s *Storage) Get(ID string) (models.Task, error) {
+func (s *Storage) Get(id string) (models.Task, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if ID == "" {
+	if id == "" {
 		return models.Task{}, models.ErrIdIsEmpty
 	}
 
-	if _, found := s.store[ID]; !found {
+	if _, found := s.store[id]; !found {
 		return models.Task{}, models.ErrTaskNotFound
 	}
 
-	return s.store[ID], nil
+	return s.store[id], nil
 }
 
 func (s *Storage) GetAll() ([]models.Task, error) {

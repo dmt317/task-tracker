@@ -179,8 +179,8 @@ func TestStorage_Get(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			for i, ID := range test.inputIds {
-				task, err := test.initMap.Get(ID)
+			for i, id := range test.inputIds {
+				task, err := test.initMap.Get(id)
 				resultTask := test.result.resultTasks[i]
 				resultError := test.result.resultErrors[i]
 				if !errors.Is(err, resultError) || task != resultTask {
@@ -330,8 +330,8 @@ func TestStorage_Delete(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			for i, ID := range test.inputIds {
-				err := test.initMap.Delete(ID)
+			for i, id := range test.inputIds {
+				err := test.initMap.Delete(id)
 				result := test.result[i]
 				if !errors.Is(err, result) {
 					t.Fatalf("test-case: (%q); returned [%q %q]", name, err, result)
@@ -341,7 +341,7 @@ func TestStorage_Delete(t *testing.T) {
 					return
 				}
 
-				_, err = test.initMap.Get(ID)
+				_, err = test.initMap.Get(id)
 				if !errors.Is(err, models.ErrTaskNotFound) {
 					t.Fatalf("test-case: (%q); task hasn't been deleted, get method return: %q", name, err)
 				}
