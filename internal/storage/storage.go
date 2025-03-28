@@ -24,7 +24,7 @@ func (s *Storage) Delete(id string) error {
 	defer s.mu.Unlock()
 
 	if id == "" {
-		return models.ErrIdIsEmpty
+		return models.ErrIDIsEmpty
 	}
 
 	if _, found := s.store[id]; !found {
@@ -41,7 +41,7 @@ func (s *Storage) Add(task *models.Task) error {
 	defer s.mu.Unlock()
 
 	if task.ID == "" {
-		return models.ErrIdIsEmpty
+		return models.ErrIDIsEmpty
 	}
 
 	if _, found := s.store[task.ID]; found {
@@ -61,7 +61,7 @@ func (s *Storage) Update(updatedTask models.Task) error {
 	defer s.mu.Unlock()
 
 	if updatedTask.ID == "" {
-		return models.ErrIdIsEmpty
+		return models.ErrIDIsEmpty
 	}
 
 	task, found := s.store[updatedTask.ID]
@@ -100,7 +100,7 @@ func (s *Storage) Get(id string) (models.Task, error) {
 	defer s.mu.Unlock()
 
 	if id == "" {
-		return models.Task{}, models.ErrIdIsEmpty
+		return models.Task{}, models.ErrIDIsEmpty
 	}
 
 	if _, found := s.store[id]; !found {

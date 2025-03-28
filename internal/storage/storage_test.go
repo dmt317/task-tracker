@@ -38,7 +38,7 @@ func TestStorage_Add(t *testing.T) {
 				{ID: "", Title: "No ID", Description: "No ID", Status: "Todo"},
 			},
 			initMap: &Storage{store: make(map[string]models.Task)},
-			result:  []error{models.ErrIdIsEmpty},
+			result:  []error{models.ErrIDIsEmpty},
 		},
 
 		"add task with duplicate id": {
@@ -151,7 +151,7 @@ func TestStorage_Get(t *testing.T) {
 			}},
 			result: TestResult_Get{
 				resultTasks:  []models.Task{{}},
-				resultErrors: []error{models.ErrIdIsEmpty},
+				resultErrors: []error{models.ErrIDIsEmpty},
 			},
 		},
 
@@ -224,7 +224,7 @@ func TestStorage_Update(t *testing.T) {
 			initMap: &Storage{store: map[string]models.Task{
 				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
-			result: []error{models.ErrIdIsEmpty},
+			result: []error{models.ErrIDIsEmpty},
 		},
 
 		"update multiple tasks": {
@@ -314,7 +314,7 @@ func TestStorage_Delete(t *testing.T) {
 			initMap: &Storage{store: map[string]models.Task{
 				"task1": {ID: "task1", Title: "Title", Description: "Description", Status: "Todo", CreatedAt: time.Now().Format(time.RFC3339Nano), UpdatedAt: time.Now().Format(time.RFC3339Nano)},
 			}},
-			result: []error{models.ErrIdIsEmpty},
+			result: []error{models.ErrIDIsEmpty},
 		},
 
 		"delete multiple tasks": {

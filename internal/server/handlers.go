@@ -131,7 +131,7 @@ func (s *HttpServer) handleError(w http.ResponseWriter, statusCode int, ip strin
 
 func (s *HttpServer) processStorageError(w http.ResponseWriter, ip string, err error) {
 	switch err {
-	case models.ErrIdIsEmpty:
+	case models.ErrIDIsEmpty:
 		s.handleError(w, http.StatusBadRequest, ip, err)
 	case models.ErrTaskNotFound:
 		s.handleError(w, http.StatusNotFound, ip, err)

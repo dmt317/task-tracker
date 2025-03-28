@@ -8,7 +8,7 @@ var (
 	// Storage errors
 	ErrTaskExists            = errors.New("task already exists")
 	ErrTaskNotFound          = errors.New("task not found")
-	ErrIdIsEmpty             = errors.New("id is empty")
+	ErrIDIsEmpty             = errors.New("id is empty")
 	ErrStorageNotInitialized = errors.New("storage is not initialized")
 
 	// HTTP server errors
