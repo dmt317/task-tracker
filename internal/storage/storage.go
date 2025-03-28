@@ -2,8 +2,9 @@ package storage
 
 import (
 	"sync"
-	"task-tracker/internal/models"
 	"time"
+
+	"task-tracker/internal/models"
 )
 
 type Storage struct {
@@ -11,12 +12,19 @@ type Storage struct {
 	mu    sync.Mutex
 }
 
+func NewStorage() *Storage {
+	return &Storage{
+		store: make(map[string]models.Task),
+		mu:    sync.Mutex{},
+	}
+}
+
 func (s *Storage) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if id == "" {
-		return models.ErrIdIsEmpty
+		return models.ErrIDIsEmpty
 	}
 
 	if _, found := s.store[id]; !found {
@@ -28,22 +36,22 @@ func (s *Storage) Delete(id string) error {
 	return nil
 }
 
-func (s *Storage) Add(task models.Task) error {
+func (s *Storage) Add(task *models.Task) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if task.Id == "" {
-		return models.ErrIdIsEmpty
+	if task.ID == "" {
+		return models.ErrIDIsEmpty
 	}
 
-	if _, found := s.store[task.Id]; found {
+	if _, found := s.store[task.ID]; found {
 		return models.ErrTaskExists
 	}
 
 	task.CreatedAt = time.Now().Format(time.RFC3339Nano)
 	task.UpdatedAt = task.CreatedAt
 
-	s.store[task.Id] = task
+	s.store[task.ID] = *task
 
 	return nil
 }
@@ -52,20 +60,37 @@ func (s *Storage) Update(updatedTask models.Task) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if updatedTask.Id == "" {
-		return models.ErrIdIsEmpty
+	if updatedTask.ID == "" {
+		return models.ErrIDIsEmpty
 	}
 
-	task, found := s.store[updatedTask.Id]
+	task, found := s.store[updatedTask.ID]
 
 	if !found {
 		return models.ErrTaskNotFound
 	}
 
-	task.Description = updatedTask.Description
-	task.UpdatedAt = time.Now().Format(time.RFC3339Nano)
+	updated := false
 
-	s.store[updatedTask.Id] = task
+	if updatedTask.Title != "" && updatedTask.Title != task.Title {
+		task.Title = updatedTask.Title
+		updated = true
+	}
+
+	if updatedTask.Description != "" && updatedTask.Description != task.Description {
+		task.Description = updatedTask.Description
+		updated = true
+	}
+
+	if updatedTask.Status != "" && updatedTask.Status != task.Status {
+		task.Status = updatedTask.Status
+		updated = true
+	}
+
+	if updated {
+		task.UpdatedAt = time.Now().Format(time.RFC3339Nano)
+		s.store[updatedTask.ID] = task
+	}
 
 	return nil
 }
@@ -75,7 +100,7 @@ func (s *Storage) Get(id string) (models.Task, error) {
 	defer s.mu.Unlock()
 
 	if id == "" {
-		return models.Task{}, models.ErrIdIsEmpty
+		return models.Task{}, models.ErrIDIsEmpty
 	}
 
 	if _, found := s.store[id]; !found {
@@ -83,4 +108,18 @@ func (s *Storage) Get(id string) (models.Task, error) {
 	}
 
 	return s.store[id], nil
+}
+
+func (s *Storage) GetAll() ([]models.Task, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	tasks := make([]models.Task, len(s.store))
+	i := 0
+	for _, task := range s.store {
+		tasks[i] = task
+		i++
+	}
+
+	return tasks, nil
 }

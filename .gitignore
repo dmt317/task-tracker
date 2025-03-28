@@ -1,4 +1,11 @@
-.idea
+# Golang binaries and build artifacts
 bin/
+
+# Editor and IDE Files
+.idea
+
+# macOS system files
 .DS_Store
+
+# Environment variables and secrets
 .env
