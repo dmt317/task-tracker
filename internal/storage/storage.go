@@ -56,7 +56,7 @@ func (s *Storage) Add(task *models.Task) error {
 	return nil
 }
 
-func (s *Storage) Update(updatedTask models.Task) error {
+func (s *Storage) Update(updatedTask *models.Task) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -116,6 +116,7 @@ func (s *Storage) GetAll() ([]models.Task, error) {
 
 	tasks := make([]models.Task, len(s.store))
 	i := 0
+
 	for _, task := range s.store {
 		tasks[i] = task
 		i++
