@@ -9,7 +9,7 @@ import (
 	"task-tracker/internal/models"
 )
 
-func (s *HttpServer) handleTasks(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPServer) handleTasks(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.handleGetAllTasks(w, r)
@@ -20,7 +20,7 @@ func (s *HttpServer) handleTasks(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *HttpServer) handleTaskById(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPServer) handleTaskByID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.handleGetTask(w, r)
@@ -33,7 +33,7 @@ func (s *HttpServer) handleTaskById(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *HttpServer) handleGetAllTasks(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPServer) handleGetAllTasks(w http.ResponseWriter, r *http.Request) {
 	tasks, err := s.storage.GetAll()
 	if err != nil {
 		s.processStorageError(w, r.RemoteAddr, err)
@@ -49,7 +49,7 @@ func (s *HttpServer) handleGetAllTasks(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *HttpServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	var task models.Task
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
@@ -74,7 +74,7 @@ func (s *HttpServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *HttpServer) handleGetTask(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPServer) handleGetTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
 	task, err := s.storage.Get(taskID)
@@ -93,7 +93,7 @@ func (s *HttpServer) handleGetTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *HttpServer) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPServer) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
 	if err := s.storage.Delete(taskID); err != nil {
@@ -104,7 +104,7 @@ func (s *HttpServer) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (s *HttpServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
 	var task models.Task
@@ -112,11 +112,12 @@ func (s *HttpServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
 		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
 		return
 	}
+
 	defer r.Body.Close()
 
 	task.ID = taskID
 
-	if err := s.storage.Update(task); err != nil {
+	if err := s.storage.Update(&task); err != nil {
 		s.processStorageError(w, r.RemoteAddr, err)
 		return
 	}
@@ -124,12 +125,12 @@ func (s *HttpServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (s *HttpServer) handleError(w http.ResponseWriter, statusCode int, ip string, err error) {
+func (s *HTTPServer) handleError(w http.ResponseWriter, statusCode int, ip string, err error) {
 	s.logger.Printf("HTTP error (%d) from %s: %s", statusCode, ip, err)
 	http.Error(w, err.Error(), statusCode)
 }
 
-func (s *HttpServer) processStorageError(w http.ResponseWriter, ip string, err error) {
+func (s *HTTPServer) processStorageError(w http.ResponseWriter, ip string, err error) {
 	switch err {
 	case models.ErrIDIsEmpty:
 		s.handleError(w, http.StatusBadRequest, ip, err)

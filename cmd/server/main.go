@@ -8,7 +8,7 @@ import (
 func main() {
 	config := config.LoadConfig()
 
-	server := server.NewHttpServer(*config)
+	server := server.NewHTTPServer(*config)
 
-	server.StartHttpServer()
+	server.StartHTTPServer()
 }

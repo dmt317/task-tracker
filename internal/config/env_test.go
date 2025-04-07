@@ -17,7 +17,9 @@ func TestLoadConfig(t *testing.T) {
 
 	assertPort := func(expected string) {
 		t.Helper()
+
 		config := LoadConfig()
+
 		if config.ServerPort != expected {
 			t.Fatalf("Expected port %s, got %s", expected, config.ServerPort)
 		}
@@ -44,6 +46,7 @@ func TestGetEnv(t *testing.T) {
 
 	assertEnv := func(key, defaultValue, expected string) {
 		t.Helper()
+
 		if value := getEnv(key, defaultValue); value != expected {
 			t.Fatalf("getEnv(%s) = %s; want %s", key, value, expected)
 		}

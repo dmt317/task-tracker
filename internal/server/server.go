@@ -13,33 +13,34 @@ import (
 	"task-tracker/internal/storage"
 )
 
-type HttpServer struct {
+type HTTPServer struct {
 	config  config.Config
 	logger  *log.Logger
 	storage *storage.Storage
 }
 
-func NewHttpServer(config config.Config) *HttpServer {
-	return &HttpServer{
+func NewHTTPServer(config config.Config) *HTTPServer {
+	return &HTTPServer{
 		config:  config,
 		logger:  log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags),
 		storage: storage.NewStorage(),
 	}
 }
 
-func (s *HttpServer) setupRoutes(mux *http.ServeMux) {
+func (s *HTTPServer) setupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/tasks", s.handleTasks)
-	mux.HandleFunc("/tasks/{id}", s.handleTaskById)
+	mux.HandleFunc("/tasks/{id}", s.handleTaskByID)
 }
 
-func (s *HttpServer) StartHttpServer() {
+func (s *HTTPServer) StartHTTPServer() {
 	mux := http.NewServeMux()
 
 	s.setupRoutes(mux)
 
 	server := &http.Server{
-		Addr:    ":" + s.config.ServerPort,
-		Handler: mux,
+		Addr:              ":" + s.config.ServerPort,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	sigs := make(chan os.Signal, 1)
@@ -47,6 +48,7 @@ func (s *HttpServer) StartHttpServer() {
 
 	go func() {
 		s.logger.Println("Starting HTTP server on port", s.config.ServerPort)
+
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			s.logger.Fatalf("Server failed: %v", err)
 		}
