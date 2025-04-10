@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 
@@ -18,6 +19,20 @@ func (s *HTTPServer) handleTasks(w http.ResponseWriter, r *http.Request) {
 	default:
 		s.handleError(w, http.StatusMethodNotAllowed, r.RemoteAddr, models.ErrMethodNotAllowed)
 	}
+}
+
+func (s *HTTPServer) handleSwagger(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		s.handleError(w, http.StatusMethodNotAllowed, r.RemoteAddr, models.ErrMethodNotAllowed)
+		return
+	}
+
+	if _, err := os.Stat("docs/static/index.html"); os.IsNotExist(err) {
+		s.handleError(w, http.StatusNotFound, r.RemoteAddr, models.ErrSwaggerUINotFound)
+		return
+	}
+
+	http.ServeFile(w, r, "docs/static/index.html")
 }
 
 func (s *HTTPServer) handleTaskByID(w http.ResponseWriter, r *http.Request) {

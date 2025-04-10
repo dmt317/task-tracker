@@ -30,6 +30,10 @@ func NewHTTPServer(config config.Config) *HTTPServer {
 func (s *HTTPServer) setupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/tasks", s.handleTasks)
 	mux.HandleFunc("/tasks/{id}", s.handleTaskByID)
+	mux.HandleFunc("/swagger", s.handleSwagger)
+
+	mux.Handle("/swagger/static/", http.StripPrefix("/swagger/static/", http.FileServer(http.Dir("docs/static"))))
+	mux.Handle("/swagger/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
 }
 
 func (s *HTTPServer) StartHTTPServer() {

@@ -1,0 +1,205 @@
+openapi: 3.0.4
+info:
+  title: Task Tracker API
+  description: This API provides a backend interface for managing tasks in a task-tracking system. It supports creating new tasks, updating their status, retrieving task details, and deleting completed or obsolete tasks. Ideal for use in project management tools, to-do list apps, or productivity systems.
+  version: 1.0.0
+
+servers:
+- url: "http://localhost:5001"
+
+paths:
+  /tasks:
+    get:
+      operationId: getTasks
+      summary: Returns a list of tasks.
+      description: Retrieves all tasks from the system. Supports basic listing functionality without filtering or pagination.
+      responses:
+        "200":
+          description: OK. Returns an array of task objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+              example:
+                - id: "task1"
+                  title: "string"
+                  description: "string"
+                  status: "string"
+                  created_at: "string"
+                  updated_at: "string"
+                - id: "task2"
+                  title: "string"
+                  description: "string"
+                  status: "string"
+                  created_at: "string"
+                  updated_at: "string" 
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      operationId: addTask
+      summary: Adds a new task.
+      description: Creates a new task entry in the system. The `id`, `created_at`, and `updated_at` fields are generated automatically.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Task"
+            example:
+              title: "string"
+              description: "string"
+              status: "string"
+      responses:
+        "201":
+          description: Created. The task was successfully created and stored in the system. Returns created task.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+              example:
+                id: "string"
+                title: "string"
+                description: "string"
+                status: "string"
+                created_at: "string"
+                updated_at: "string"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Conflict. The request could not be completed due to a conflict with the current state of the resource. This may occur if a task with the same ID already exists. The response body contains a plain text explanation of the error.
+          content:
+            text/plain; charset=utf-8:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /tasks/{id}:
+    get:
+      operationId: getTaskByID
+      description: Fetches the task object corresponding to the provided unique task ID. If the task does not exist, a 404 response is returned.
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: Unique identifier of the task to be retrieved.
+      summary: Finds task by ID.
+      responses:
+        "200":
+          description: OK. Returns the task object that matches the specified ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+          
+    delete:
+      operationId: deleteTaskByID
+      description: Permanently deletes the task identified by the provided ID. If the task does not exist, a 404 response is returned.
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Unique identifier of the task to be retrieved.
+      summary: Deletes a task by ID.
+      responses:
+        "204":
+          description: No Content. The task was successfully deleted. The response does not include a response body.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+          
+    patch:
+      operationId: updateTaskByID
+      description: Applies partial updates to a requested task. If the task does not exist, a 404 response is returned.
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: Unique identifier of the task to be retrieved.
+      summary: Updates a task by ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Task"
+            example:
+              title: "string"
+              description: "string"
+              status: "string"
+      responses:
+        "204":
+          description: No Content. The task was successfully updated. The response does not include a response body.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: Automatically generated unique task identifier.
+          example: "string"
+        title:
+          type: string
+          description: A short and meaningful title for the task.
+          example: "string"
+        description:
+          type: string
+          description: A detailed explanation of the task to provide context and instructions.
+          example: "string"
+        status:
+          type: string
+          description: Current state of the task.
+          example: "string"
+        created_at:
+          type: string
+          readOnly: true
+          description: The date and time when the task was created in ISO 8601 format (e.g., 2025-04-09T18:21:41.935898+10:00).
+          example: "string"
+        updated_at:
+          type: string
+          readOnly: true
+          description: The date and time when the task was last modified in ISO 8601 format (e.g., 2025-04-09T18:21:41.935898+10:00).
+          example: "string"
+          
+  responses:
+    InternalServerError:
+      description: Internal Server Error. An unexpected error occurred on the server side. The response body contains a plain text explanation of the error.
+      content:
+        text/plain; charset=utf-8:
+          schema:
+            type: string
+    NotFound:
+      description: Not Found. The requested resource could not be found. This means that a task with the specified ID does not exist. The response body contains a plain text explanation of the error.
+      content:
+        text/plain; charset=utf-8:
+          schema:
+            type: string
+    BadRequest:
+      description: Bad Request. The server could not process the request due to invalid input. This may include missing required fields, incorrect data types, or malformed JSON. The response body contains a plain text explanation of the error.
+      content:
+        text/plain; charset=utf-8:
+          schema:
+            type: string
