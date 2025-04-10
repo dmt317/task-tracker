@@ -11,7 +11,8 @@ var (
 	ErrIDIsEmpty    = errors.New("id is empty")
 
 	// HTTP server errors.
-	ErrMethodNotAllowed = errors.New("method not allowed")
-	ErrBadRequest       = errors.New("invalid request body")
-	ErrEncodeJSON       = errors.New("failed to encode task to JSON")
+	ErrMethodNotAllowed  = errors.New("method not allowed")
+	ErrBadRequest        = errors.New("invalid request body")
+	ErrEncodeJSON        = errors.New("failed to encode task to JSON")
+	ErrSwaggerUINotFound = errors.New("swagger UI not found")
 )
