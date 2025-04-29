@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/google/uuid"
-
 	"task-tracker/internal/models"
 )
 
@@ -49,7 +47,7 @@ func (s *HTTPServer) handleTaskByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *HTTPServer) handleGetAllTasks(w http.ResponseWriter, r *http.Request) {
-	tasks, err := s.storage.GetAll()
+	tasks, err := s.taskService.GetAll()
 	if err != nil {
 		s.processStorageError(w, r.RemoteAddr, err)
 		return
@@ -73,9 +71,17 @@ func (s *HTTPServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	task.ID = uuid.New().String()
+	if task.ID != "" || task.CreatedAt != "" || task.UpdatedAt != "" {
+		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
+		return
+	}
 
-	if err := s.storage.Add(&task); err != nil {
+	if task.Title == "" || task.Description == "" || task.Status == "" {
+		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
+		return
+	}
+
+	if err := s.taskService.Add(&task); err != nil {
 		s.processStorageError(w, r.RemoteAddr, err)
 		return
 	}
@@ -92,7 +98,7 @@ func (s *HTTPServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 func (s *HTTPServer) handleGetTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
-	task, err := s.storage.Get(taskID)
+	task, err := s.taskService.Get(taskID)
 
 	if err != nil {
 		s.processStorageError(w, r.RemoteAddr, err)
@@ -111,7 +117,7 @@ func (s *HTTPServer) handleGetTask(w http.ResponseWriter, r *http.Request) {
 func (s *HTTPServer) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
-	if err := s.storage.Delete(taskID); err != nil {
+	if err := s.taskService.Delete(taskID); err != nil {
 		s.processStorageError(w, r.RemoteAddr, err)
 		return
 	}
@@ -123,16 +129,26 @@ func (s *HTTPServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
 	var task models.Task
+
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
 		return
 	}
-
 	defer r.Body.Close()
+
+	if task.ID != "" || task.CreatedAt != "" || task.UpdatedAt != "" {
+		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
+		return
+	}
+
+	if task.Title == "" || task.Description == "" || task.Status == "" {
+		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
+		return
+	}
 
 	task.ID = taskID
 
-	if err := s.storage.Update(&task); err != nil {
+	if err := s.taskService.Update(&task); err != nil {
 		s.processStorageError(w, r.RemoteAddr, err)
 		return
 	}
@@ -147,8 +163,6 @@ func (s *HTTPServer) handleError(w http.ResponseWriter, statusCode int, ip strin
 
 func (s *HTTPServer) processStorageError(w http.ResponseWriter, ip string, err error) {
 	switch err {
-	case models.ErrIDIsEmpty:
-		s.handleError(w, http.StatusBadRequest, ip, err)
 	case models.ErrTaskNotFound:
 		s.handleError(w, http.StatusNotFound, ip, err)
 	case models.ErrTaskExists:

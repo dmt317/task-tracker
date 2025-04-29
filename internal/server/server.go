@@ -10,20 +10,21 @@ import (
 	"time"
 
 	"task-tracker/internal/config"
-	"task-tracker/internal/storage"
+	"task-tracker/internal/repository"
+	"task-tracker/internal/service"
 )
 
 type HTTPServer struct {
-	config  config.Config
-	logger  *log.Logger
-	storage *storage.Storage
+	config      config.Config
+	logger      *log.Logger
+	taskService service.TaskService
 }
 
-func NewHTTPServer(config config.Config) *HTTPServer {
+func NewHTTPServer(config config.Config, repo repository.TaskRepository) *HTTPServer {
 	return &HTTPServer{
-		config:  config,
-		logger:  log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags),
-		storage: storage.NewStorage(),
+		config:      config,
+		logger:      log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags),
+		taskService: service.NewDefaultTaskService(repo),
 	}
 }
 
