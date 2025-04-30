@@ -2,6 +2,8 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -15,18 +17,18 @@ func (s *HTTPServer) handleTasks(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.handleCreateTask(w, r)
 	default:
-		s.handleError(w, http.StatusMethodNotAllowed, r.RemoteAddr, models.ErrMethodNotAllowed)
+		s.handleError(w, r.RemoteAddr, models.ErrMethodNotAllowed)
 	}
 }
 
 func (s *HTTPServer) handleSwagger(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		s.handleError(w, http.StatusMethodNotAllowed, r.RemoteAddr, models.ErrMethodNotAllowed)
+		s.handleError(w, r.RemoteAddr, models.ErrMethodNotAllowed)
 		return
 	}
 
 	if _, err := os.Stat("docs/static/index.html"); os.IsNotExist(err) {
-		s.handleError(w, http.StatusNotFound, r.RemoteAddr, models.ErrSwaggerUINotFound)
+		s.handleError(w, r.RemoteAddr, models.ErrSwaggerUINotFound)
 		return
 	}
 
@@ -42,14 +44,14 @@ func (s *HTTPServer) handleTaskByID(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPatch:
 		s.handleUpdateTask(w, r)
 	default:
-		s.handleError(w, http.StatusMethodNotAllowed, r.RemoteAddr, models.ErrMethodNotAllowed)
+		s.handleError(w, r.RemoteAddr, models.ErrMethodNotAllowed)
 	}
 }
 
 func (s *HTTPServer) handleGetAllTasks(w http.ResponseWriter, r *http.Request) {
 	tasks, err := s.taskService.GetAll()
 	if err != nil {
-		s.processStorageError(w, r.RemoteAddr, err)
+		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
 
@@ -57,32 +59,29 @@ func (s *HTTPServer) handleGetAllTasks(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(tasks); err != nil {
-		s.handleError(w, http.StatusInternalServerError, r.RemoteAddr, models.ErrEncodeJSON)
+		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
 }
 
 func (s *HTTPServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
+	var request models.CreateTaskRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		s.handleError(w, r.RemoteAddr, models.ErrBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
-	if task.ID != "" || task.CreatedAt != "" || task.UpdatedAt != "" {
-		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
+	if err := request.Validate(); err != nil {
+		s.handleError(w, r.RemoteAddr, fmt.Errorf("request validation: %w", err))
 		return
 	}
 
-	if task.Title == "" || task.Description == "" || task.Status == "" {
-		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
-		return
-	}
+	task := request.ConvertToTask()
 
-	if err := s.taskService.Add(&task); err != nil {
-		s.processStorageError(w, r.RemoteAddr, err)
+	if err := s.taskService.Add(task); err != nil {
+		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
 
@@ -90,7 +89,7 @@ func (s *HTTPServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	if err := json.NewEncoder(w).Encode(task); err != nil {
-		s.handleError(w, http.StatusInternalServerError, r.RemoteAddr, models.ErrEncodeJSON)
+		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
 }
@@ -101,7 +100,7 @@ func (s *HTTPServer) handleGetTask(w http.ResponseWriter, r *http.Request) {
 	task, err := s.taskService.Get(taskID)
 
 	if err != nil {
-		s.processStorageError(w, r.RemoteAddr, err)
+		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
 
@@ -109,7 +108,7 @@ func (s *HTTPServer) handleGetTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(task); err != nil {
-		s.handleError(w, http.StatusInternalServerError, r.RemoteAddr, models.ErrEncodeJSON)
+		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
 }
@@ -118,7 +117,7 @@ func (s *HTTPServer) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
 	if err := s.taskService.Delete(taskID); err != nil {
-		s.processStorageError(w, r.RemoteAddr, err)
+		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
 
@@ -128,46 +127,40 @@ func (s *HTTPServer) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
 func (s *HTTPServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
-	var task models.Task
+	var request models.UpdateTaskRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		s.handleError(w, r.RemoteAddr, models.ErrBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
-	if task.ID != "" || task.CreatedAt != "" || task.UpdatedAt != "" {
-		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
+	if err := request.Validate(); err != nil {
+		s.handleError(w, r.RemoteAddr, fmt.Errorf("request validation: %w", err))
 		return
 	}
 
-	if task.Title == "" || task.Description == "" || task.Status == "" {
-		s.handleError(w, http.StatusBadRequest, r.RemoteAddr, models.ErrBadRequest)
-		return
-	}
+	task := request.ConvertToTask(taskID)
 
-	task.ID = taskID
-
-	if err := s.taskService.Update(&task); err != nil {
-		s.processStorageError(w, r.RemoteAddr, err)
+	if err := s.taskService.Update(task); err != nil {
+		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (s *HTTPServer) handleError(w http.ResponseWriter, statusCode int, ip string, err error) {
-	s.logger.Printf("HTTP error (%d) from %s: %s", statusCode, ip, err)
-	http.Error(w, err.Error(), statusCode)
+func (s *HTTPServer) handleError(w http.ResponseWriter, ip string, err error) {
+	var modelError models.Error
+
+	if !errors.As(err, &modelError) {
+		s.processError(w, http.StatusInternalServerError, ip, err)
+	}
+
+	s.processError(w, modelError.StatusCode, ip, modelError.Err)
 }
 
-func (s *HTTPServer) processStorageError(w http.ResponseWriter, ip string, err error) {
-	switch err {
-	case models.ErrTaskNotFound:
-		s.handleError(w, http.StatusNotFound, ip, err)
-	case models.ErrTaskExists:
-		s.handleError(w, http.StatusConflict, ip, err)
-	default:
-		s.handleError(w, http.StatusInternalServerError, ip, err)
-	}
+func (s *HTTPServer) processError(w http.ResponseWriter, statusCode int, ip string, err error) {
+	s.logger.Printf("HTTP error (%d) from %s: %s", statusCode, ip, err)
+	http.Error(w, err.Error(), statusCode)
 }

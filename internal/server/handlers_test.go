@@ -244,7 +244,7 @@ func TestHandler_UpdateTask(t *testing.T) {
 
 		"bad request on invalid json": {
 			taskID:      "task1",
-			requestBody: `{"id":"task2"}`,
+			requestBody: `{"title":"title"}`,
 			mockSetup: &service.TaskServiceMock{
 				ForceInternalError: false,
 			},

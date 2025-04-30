@@ -2,17 +2,36 @@ package models
 
 import (
 	"errors"
+	"net/http"
 )
+
+type Error struct {
+	Err        error
+	StatusCode int
+}
+
+func (e Error) Error() string {
+	return e.Err.Error()
+}
+
+func NewError(errorMessage string, statusCode int) Error {
+	return Error{
+		Err:        errors.New(errorMessage),
+		StatusCode: statusCode,
+	}
+}
 
 var (
 	// Storage errors.
-	ErrTaskExists   = errors.New("task already exists")
-	ErrTaskNotFound = errors.New("task not found")
-	ErrIDIsEmpty    = errors.New("id is empty")
+	ErrTaskExists   = NewError("task already exists", http.StatusConflict)
+	ErrTaskNotFound = NewError("task not found", http.StatusNotFound)
+	ErrIDIsEmpty    = NewError("id is empty", http.StatusBadRequest)
 
-	// HTTP server errors.
-	ErrMethodNotAllowed  = errors.New("method not allowed")
-	ErrBadRequest        = errors.New("invalid request body")
-	ErrEncodeJSON        = errors.New("failed to encode task to JSON")
-	ErrSwaggerUINotFound = errors.New("swagger UI not found")
+	ErrTitleIsEmpty       = NewError("title field is empty", http.StatusBadRequest)
+	ErrDescriptionIsEmpty = NewError("description field is empty", http.StatusBadRequest)
+	ErrStatusIsEmpty      = NewError("status field is empty", http.StatusBadRequest)
+
+	ErrMethodNotAllowed  = NewError("method not allowed", http.StatusBadRequest)
+	ErrBadRequest        = NewError("invalid request body", http.StatusBadRequest)
+	ErrSwaggerUINotFound = NewError("swagger UI not found", http.StatusNotFound)
 )

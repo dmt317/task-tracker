@@ -2,11 +2,15 @@ package service
 
 import (
 	"errors"
+	"net/http"
 
 	"task-tracker/internal/models"
 )
 
-var ErrInternalMock = errors.New("mock internal error")
+var ErrInternalMock = models.Error{
+	Err:        errors.New("internal server error"),
+	StatusCode: http.StatusInternalServerError,
+}
 
 const NotFound = "not_found"
 
