@@ -20,7 +20,7 @@ var (
 	ErrUpdatingTask    = fmt.Errorf("error updating task")
 )
 
-func (repo *MockTaskRepository) Add(ctx context.Context, task *models.Task) error {
+func (repo *MockTaskRepository) Add(_ context.Context, _ *models.Task) error {
 	if repo.ForceRepositoryError {
 		return ErrAddingTask
 	}
@@ -28,7 +28,7 @@ func (repo *MockTaskRepository) Add(ctx context.Context, task *models.Task) erro
 	return nil
 }
 
-func (repo *MockTaskRepository) Delete(ctx context.Context, id string) error {
+func (repo *MockTaskRepository) Delete(_ context.Context, _ string) error {
 	if repo.ForceRepositoryError {
 		return ErrDeletingTask
 	}
@@ -36,11 +36,11 @@ func (repo *MockTaskRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (repo *MockTaskRepository) Exists(ctx context.Context, id string) (bool, error) {
+func (repo *MockTaskRepository) Exists(_ context.Context, _ string) (bool, error) {
 	return repo.IsExist, nil
 }
 
-func (repo *MockTaskRepository) Get(ctx context.Context, id string) (models.Task, error) {
+func (repo *MockTaskRepository) Get(_ context.Context, id string) (models.Task, error) {
 	if repo.ForceRepositoryError {
 		return models.Task{}, ErrGettingTask
 	}
@@ -48,7 +48,7 @@ func (repo *MockTaskRepository) Get(ctx context.Context, id string) (models.Task
 	return models.Task{ID: id, Title: "Mock Task"}, nil
 }
 
-func (repo *MockTaskRepository) GetAll(ctx context.Context) ([]models.Task, error) {
+func (repo *MockTaskRepository) GetAll(_ context.Context) ([]models.Task, error) {
 	if repo.ForceRepositoryError {
 		return []models.Task{}, ErrGettingAllTasks
 	}
@@ -56,7 +56,7 @@ func (repo *MockTaskRepository) GetAll(ctx context.Context) ([]models.Task, erro
 	return []models.Task{{ID: "task1", Title: "Mock Task"}}, nil
 }
 
-func (repo *MockTaskRepository) Update(ctx context.Context, updatedTask *models.Task) error {
+func (repo *MockTaskRepository) Update(_ context.Context, _ *models.Task) error {
 	if repo.ForceRepositoryError {
 		return ErrUpdatingTask
 	}

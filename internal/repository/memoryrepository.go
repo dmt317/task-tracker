@@ -19,7 +19,7 @@ func NewMemoryTaskRepository() *MemoryTaskRepository {
 	}
 }
 
-func (repo *MemoryTaskRepository) Add(ctx context.Context, task *models.Task) error {
+func (repo *MemoryTaskRepository) Add(_ context.Context, task *models.Task) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -28,7 +28,7 @@ func (repo *MemoryTaskRepository) Add(ctx context.Context, task *models.Task) er
 	return nil
 }
 
-func (repo *MemoryTaskRepository) Delete(ctx context.Context, id string) error {
+func (repo *MemoryTaskRepository) Delete(_ context.Context, id string) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -37,7 +37,7 @@ func (repo *MemoryTaskRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (repo *MemoryTaskRepository) Exists(ctx context.Context, id string) (bool, error) {
+func (repo *MemoryTaskRepository) Exists(_ context.Context, id string) (bool, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -46,7 +46,7 @@ func (repo *MemoryTaskRepository) Exists(ctx context.Context, id string) (bool, 
 	return found, nil
 }
 
-func (repo *MemoryTaskRepository) Get(ctx context.Context, id string) (models.Task, error) {
+func (repo *MemoryTaskRepository) Get(_ context.Context, id string) (models.Task, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -55,7 +55,7 @@ func (repo *MemoryTaskRepository) Get(ctx context.Context, id string) (models.Ta
 	return task, nil
 }
 
-func (repo *MemoryTaskRepository) GetAll(ctx context.Context) ([]models.Task, error) {
+func (repo *MemoryTaskRepository) GetAll(_ context.Context) ([]models.Task, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -70,7 +70,7 @@ func (repo *MemoryTaskRepository) GetAll(ctx context.Context) ([]models.Task, er
 	return tasks, nil
 }
 
-func (repo *MemoryTaskRepository) Update(ctx context.Context, updatedTask *models.Task) error {
+func (repo *MemoryTaskRepository) Update(_ context.Context, updatedTask *models.Task) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
