@@ -49,7 +49,7 @@ func (s *HTTPServer) handleTaskByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *HTTPServer) handleGetAllTasks(w http.ResponseWriter, r *http.Request) {
-	tasks, err := s.taskService.GetAll()
+	tasks, err := s.taskService.GetAll(r.Context())
 	if err != nil {
 		s.handleError(w, r.RemoteAddr, err)
 		return
@@ -80,7 +80,7 @@ func (s *HTTPServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 
 	task := request.ConvertToTask()
 
-	if err := s.taskService.Add(task); err != nil {
+	if err := s.taskService.Add(r.Context(), task); err != nil {
 		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
@@ -97,7 +97,7 @@ func (s *HTTPServer) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 func (s *HTTPServer) handleGetTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
-	task, err := s.taskService.Get(taskID)
+	task, err := s.taskService.Get(r.Context(), taskID)
 
 	if err != nil {
 		s.handleError(w, r.RemoteAddr, err)
@@ -116,7 +116,7 @@ func (s *HTTPServer) handleGetTask(w http.ResponseWriter, r *http.Request) {
 func (s *HTTPServer) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 
-	if err := s.taskService.Delete(taskID); err != nil {
+	if err := s.taskService.Delete(r.Context(), taskID); err != nil {
 		s.handleError(w, r.RemoteAddr, err)
 		return
 	}
@@ -142,7 +142,7 @@ func (s *HTTPServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	task := request.ConvertToTask(taskID)
 
-	if err := s.taskService.Update(task); err != nil {
+	if err := s.taskService.Update(r.Context(), task); err != nil {
 		s.handleError(w, r.RemoteAddr, err)
 		return
 	}

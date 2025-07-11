@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -18,46 +19,43 @@ func NewMemoryTaskRepository() *MemoryTaskRepository {
 	}
 }
 
-func (repo *MemoryTaskRepository) Add(task *models.Task) error {
+func (repo *MemoryTaskRepository) Add(_ context.Context, task *models.Task) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
-
-	if _, found := repo.store[task.ID]; found {
-		return models.ErrTaskExists
-	}
 
 	repo.store[task.ID] = *task
 
 	return nil
 }
 
-func (repo *MemoryTaskRepository) Delete(id string) error {
+func (repo *MemoryTaskRepository) Delete(_ context.Context, id string) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
-
-	if _, found := repo.store[id]; !found {
-		return models.ErrTaskNotFound
-	}
 
 	delete(repo.store, id)
 
 	return nil
 }
 
-func (repo *MemoryTaskRepository) Get(id string) (models.Task, error) {
+func (repo *MemoryTaskRepository) Exists(_ context.Context, id string) (bool, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	task, found := repo.store[id]
+	_, found := repo.store[id]
 
-	if !found {
-		return models.Task{}, models.ErrTaskNotFound
-	}
+	return found, nil
+}
+
+func (repo *MemoryTaskRepository) Get(_ context.Context, id string) (models.Task, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	task := repo.store[id]
 
 	return task, nil
 }
 
-func (repo *MemoryTaskRepository) GetAll() ([]models.Task, error) {
+func (repo *MemoryTaskRepository) GetAll(_ context.Context) ([]models.Task, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -72,15 +70,11 @@ func (repo *MemoryTaskRepository) GetAll() ([]models.Task, error) {
 	return tasks, nil
 }
 
-func (repo *MemoryTaskRepository) Update(updatedTask *models.Task) error {
+func (repo *MemoryTaskRepository) Update(_ context.Context, updatedTask *models.Task) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	task, found := repo.store[updatedTask.ID]
-
-	if !found {
-		return models.ErrTaskNotFound
-	}
+	task := repo.store[updatedTask.ID]
 
 	updated := false
 

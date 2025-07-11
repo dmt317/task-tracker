@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -18,7 +19,7 @@ type TaskServiceMock struct {
 	ForceInternalError bool
 }
 
-func (m *TaskServiceMock) Add(task *models.Task) error {
+func (m *TaskServiceMock) Add(_ context.Context, task *models.Task) error {
 	if task.Title == "existing" {
 		return models.ErrTaskExists
 	}
@@ -30,7 +31,7 @@ func (m *TaskServiceMock) Add(task *models.Task) error {
 	return nil
 }
 
-func (m *TaskServiceMock) Delete(id string) error {
+func (m *TaskServiceMock) Delete(_ context.Context, id string) error {
 	if id == NotFound {
 		return models.ErrTaskNotFound
 	}
@@ -42,7 +43,7 @@ func (m *TaskServiceMock) Delete(id string) error {
 	return nil
 }
 
-func (m *TaskServiceMock) Get(id string) (models.Task, error) {
+func (m *TaskServiceMock) Get(_ context.Context, id string) (models.Task, error) {
 	if id == NotFound {
 		return models.Task{}, models.ErrTaskNotFound
 	}
@@ -54,7 +55,7 @@ func (m *TaskServiceMock) Get(id string) (models.Task, error) {
 	return models.Task{ID: id, Title: "Mock Task"}, nil
 }
 
-func (m *TaskServiceMock) GetAll() ([]models.Task, error) {
+func (m *TaskServiceMock) GetAll(_ context.Context) ([]models.Task, error) {
 	if m.ForceInternalError {
 		return []models.Task{}, ErrInternalMock
 	}
@@ -62,7 +63,7 @@ func (m *TaskServiceMock) GetAll() ([]models.Task, error) {
 	return []models.Task{{ID: "task1", Title: "Mock Task"}}, nil
 }
 
-func (m *TaskServiceMock) Update(updatedTask *models.Task) error {
+func (m *TaskServiceMock) Update(_ context.Context, updatedTask *models.Task) error {
 	if updatedTask.ID == NotFound {
 		return models.ErrTaskNotFound
 	}

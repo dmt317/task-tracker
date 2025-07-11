@@ -20,11 +20,9 @@ type HTTPServer struct {
 	taskService service.TaskService
 }
 
-func NewHTTPServer(config config.Config, repo repository.TaskRepository) *HTTPServer {
+func NewHTTPServer(config config.Config) *HTTPServer {
 	return &HTTPServer{
-		config:      config,
-		logger:      log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags),
-		taskService: service.NewDefaultTaskService(repo),
+		config: config,
 	}
 }
 
@@ -37,7 +35,33 @@ func (s *HTTPServer) setupRoutes(mux *http.ServeMux) {
 	mux.Handle("/swagger/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
 }
 
-func (s *HTTPServer) StartHTTPServer() {
+func (s *HTTPServer) configureServer(ctx context.Context) error {
+	pool, err := repository.CreateDBPool(ctx, s.config.DBConn)
+	if err != nil {
+		return err
+	}
+
+	repo := repository.NewPostgresTaskRepository(pool)
+
+	s.taskService = service.NewDefaultTaskService(repo)
+
+	s.logger = log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags)
+
+	return nil
+}
+
+func (s *HTTPServer) Start() error {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	return s.startHTTPServer(ctx, cancel)
+}
+
+func (s *HTTPServer) startHTTPServer(ctx context.Context, cancel context.CancelFunc) error {
+	err := s.configureServer(ctx)
+	if err != nil {
+		return err
+	}
+
 	mux := http.NewServeMux()
 
 	s.setupRoutes(mux)
@@ -62,12 +86,16 @@ func (s *HTTPServer) StartHTTPServer() {
 	<-sigs
 	s.logger.Println("Shutting down server...")
 
-	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
+	cancel()
+
+	shutdownCtx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdown()
 
-	if err := server.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(shutdownCtx); err != nil {
 		s.logger.Fatalf("Server forced to shutdown: %v", err)
 	}
 
 	s.logger.Println("Server gracefully shut down")
+
+	return server.Shutdown(shutdownCtx)
 }
