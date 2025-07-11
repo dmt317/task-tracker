@@ -92,7 +92,7 @@ func (repo *PostgresTaskRepository) Get(ctx context.Context, id string) (models.
 	)
 
 	if err != nil {
-		return models.Task{}, models.ErrTaskNotFound
+		return models.Task{}, fmt.Errorf("error getting task: %v", err)
 	}
 
 	return task, nil

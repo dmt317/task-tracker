@@ -25,7 +25,6 @@ var (
 	// Storage errors.
 	ErrTaskExists   = NewError("task already exists", http.StatusConflict)
 	ErrTaskNotFound = NewError("task not found", http.StatusNotFound)
-	ErrIDIsEmpty    = NewError("id is empty", http.StatusBadRequest)
 
 	ErrTitleIsEmpty       = NewError("title field is empty", http.StatusBadRequest)
 	ErrDescriptionIsEmpty = NewError("description field is empty", http.StatusBadRequest)

@@ -45,16 +45,12 @@ func (s *DefaultTaskService) Delete(ctx context.Context, id string) error {
 		return models.ErrTaskNotFound
 	}
 
-	if id == "" {
-		return models.ErrIDIsEmpty
-	}
-
 	return s.repo.Delete(ctx, id)
 }
 
 func (s *DefaultTaskService) Get(ctx context.Context, id string) (models.Task, error) {
-	if id == "" {
-		return models.Task{}, models.ErrIDIsEmpty
+	if exists, _ := s.repo.Exists(ctx, id); !exists {
+		return models.Task{}, models.ErrTaskNotFound
 	}
 
 	return s.repo.Get(ctx, id)
@@ -67,10 +63,6 @@ func (s *DefaultTaskService) GetAll(ctx context.Context) ([]models.Task, error) 
 func (s *DefaultTaskService) Update(ctx context.Context, updatedTask *models.Task) error {
 	if exists, _ := s.repo.Exists(ctx, updatedTask.ID); !exists {
 		return models.ErrTaskNotFound
-	}
-
-	if updatedTask.ID == "" {
-		return models.ErrIDIsEmpty
 	}
 
 	return s.repo.Update(ctx, updatedTask)
