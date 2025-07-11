@@ -35,8 +35,8 @@ func (s *HTTPServer) setupRoutes(mux *http.ServeMux) {
 	mux.Handle("/swagger/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
 }
 
-func (s *HTTPServer) configureServer() error {
-	pool, err := repository.ConnectToDB(s.config.DBConn)
+func (s *HTTPServer) configureServer(ctx context.Context) error {
+	pool, err := repository.CreateDBPool(ctx, s.config.DBConn)
 	if err != nil {
 		return err
 	}
@@ -51,16 +51,13 @@ func (s *HTTPServer) configureServer() error {
 }
 
 func (s *HTTPServer) Start() error {
-	err := s.configureServer()
-	if err != nil {
-		return err
-	}
+	ctx, cancel := context.WithCancel(context.Background())
 
-	return s.startHTTPServer()
+	return s.startHTTPServer(ctx, cancel)
 }
 
-func (s *HTTPServer) startHTTPServer() error {
-	err := s.configureServer()
+func (s *HTTPServer) startHTTPServer(ctx context.Context, cancel context.CancelFunc) error {
+	err := s.configureServer(ctx)
 	if err != nil {
 		return err
 	}
@@ -89,14 +86,16 @@ func (s *HTTPServer) startHTTPServer() error {
 	<-sigs
 	s.logger.Println("Shutting down server...")
 
-	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
+	cancel()
+
+	shutdownCtx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdown()
 
-	if err := server.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(shutdownCtx); err != nil {
 		s.logger.Fatalf("Server forced to shutdown: %v", err)
 	}
 
 	s.logger.Println("Server gracefully shut down")
 
-	return server.Shutdown(ctx)
+	return server.Shutdown(shutdownCtx)
 }

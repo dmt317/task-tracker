@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -36,25 +37,6 @@ func TestStorage_Add(t *testing.T) {
 			},
 			storage: NewMemoryTaskRepository(),
 			result:  []error{nil},
-		},
-
-		"add task with duplicate id": {
-			inputTasks: []*models.Task{
-				{
-					ID:          "task1",
-					Title:       "Title",
-					Description: "First task",
-					Status:      "Todo",
-				},
-				{
-					ID:          "task1",
-					Title:       "Title",
-					Description: "Duplicate task",
-					Status:      "Todo",
-				},
-			},
-			storage: NewMemoryTaskRepository(),
-			result:  []error{nil, models.ErrTaskExists},
 		},
 
 		"add task with empty description": {
@@ -94,29 +76,6 @@ func TestStorage_Add(t *testing.T) {
 			storage: NewMemoryTaskRepository(),
 			result:  []error{nil, nil, nil},
 		},
-
-		"add duplicate task when task already in storage": {
-			inputTasks: []*models.Task{
-				{
-					ID:          "task1",
-					Title:       "Duplicate task",
-					Description: "Duplicate task",
-					Status:      "Todo",
-				},
-			},
-			storage: &MemoryTaskRepository{
-				store: map[string]models.Task{
-					"task1": {
-						ID:          "task1",
-						Title:       "First task",
-						Description: "First task",
-						Status:      "Todo",
-						CreatedAt:   time.Now().Format(time.RFC3339Nano),
-						UpdatedAt:   time.Now().Format(time.RFC3339Nano),
-					}},
-			},
-			result: []error{models.ErrTaskExists},
-		},
 	}
 
 	for name, test := range tests {
@@ -124,7 +83,7 @@ func TestStorage_Add(t *testing.T) {
 			t.Parallel()
 
 			for i, task := range test.inputTasks {
-				gotErr := test.storage.Add(task)
+				gotErr := test.storage.Add(context.Background(), task)
 				expectedErr := test.result[i]
 
 				if !errors.Is(gotErr, expectedErr) {
@@ -135,7 +94,7 @@ func TestStorage_Add(t *testing.T) {
 					return
 				}
 
-				currTask, err := test.storage.Get(task.ID)
+				currTask, err := test.storage.Get(context.Background(), task.ID)
 				if err != nil {
 					t.Fatalf("test-case: (%q); unexpected error: %q", name, err)
 				}
@@ -178,43 +137,6 @@ func TestStorage_Get(t *testing.T) {
 					UpdatedAt:   fixedTime,
 				}},
 				resultErrors: []error{nil},
-			},
-		},
-
-		"get non-existing task when there are multiple tasks in the map": {
-			inputIDs: []string{"task2"},
-			storage: &MemoryTaskRepository{
-				store: map[string]models.Task{
-					"task1": {
-						ID:          "task1",
-						Title:       "First task",
-						Description: "First task",
-						Status:      "Todo",
-						CreatedAt:   fixedTime,
-						UpdatedAt:   fixedTime,
-					},
-					"task3": {
-						ID:          "task3",
-						Title:       "Third task",
-						Description: "Third task",
-						Status:      "Todo",
-						CreatedAt:   fixedTime,
-						UpdatedAt:   fixedTime,
-					},
-				},
-			},
-			result: TestResultGet{
-				resultTasks:  []models.Task{{}},
-				resultErrors: []error{models.ErrTaskNotFound},
-			},
-		},
-
-		"get non-existing task when there are no tasks in the map": {
-			inputIDs: []string{"task1"},
-			storage:  NewMemoryTaskRepository(),
-			result: TestResultGet{
-				resultTasks:  []models.Task{{}},
-				resultErrors: []error{models.ErrTaskNotFound},
 			},
 		},
 
@@ -308,7 +230,7 @@ func TestStorage_Get(t *testing.T) {
 			t.Parallel()
 
 			for i, id := range test.inputIDs {
-				task, err := test.storage.Get(id)
+				task, err := test.storage.Get(context.Background(), id)
 				resultTask := test.result.resultTasks[i]
 				resultError := test.result.resultErrors[i]
 
@@ -348,30 +270,6 @@ func TestStorage_Update(t *testing.T) {
 				},
 			},
 			result: []error{nil},
-		},
-
-		"update non-existing task": {
-			inputTasks: []*models.Task{
-				{
-					ID:          "task2",
-					Title:       "New title",
-					Description: "New description",
-					Status:      "Done",
-				},
-			},
-			storage: &MemoryTaskRepository{
-				store: map[string]models.Task{
-					"task1": {
-						ID:          "task1",
-						Title:       "Title",
-						Description: "Description",
-						Status:      "Todo",
-						CreatedAt:   time.Now().Format(time.RFC3339Nano),
-						UpdatedAt:   time.Now().Format(time.RFC3339Nano),
-					},
-				},
-			},
-			result: []error{models.ErrTaskNotFound},
 		},
 
 		"update multiple tasks": {
@@ -456,7 +354,7 @@ func TestStorage_Update(t *testing.T) {
 			t.Parallel()
 
 			for i, task := range test.inputTasks {
-				err := test.storage.Update(task)
+				err := test.storage.Update(context.Background(), task)
 				result := test.result[i]
 
 				if !errors.Is(err, result) {
@@ -467,7 +365,7 @@ func TestStorage_Update(t *testing.T) {
 					return
 				}
 
-				updatedTask, err := test.storage.Get(task.ID)
+				updatedTask, err := test.storage.Get(context.Background(), task.ID)
 				if err != nil {
 					t.Fatalf("test-case: (%q); unexpected error: %q", name, err)
 				}
@@ -504,36 +402,6 @@ func TestStorage_Delete(t *testing.T) {
 			},
 			result: []error{nil},
 		},
-		"delete non-existing task when there are no tasks in the map": {
-			inputIDs: []string{"task1"},
-			storage:  NewMemoryTaskRepository(),
-			result:   []error{models.ErrTaskNotFound},
-		},
-
-		"delete non-existing task when there are some tasks in the map": {
-			inputIDs: []string{"task1"},
-			storage: &MemoryTaskRepository{
-				store: map[string]models.Task{
-					"task2": {
-						ID:          "task2",
-						Title:       "Title",
-						Description: "Description",
-						Status:      "Todo",
-						CreatedAt:   time.Now().Format(time.RFC3339Nano),
-						UpdatedAt:   time.Now().Format(time.RFC3339Nano),
-					},
-					"task3": {
-						ID:          "task3",
-						Title:       "Title",
-						Description: "Description",
-						Status:      "Todo",
-						CreatedAt:   time.Now().Format(time.RFC3339Nano),
-						UpdatedAt:   time.Now().Format(time.RFC3339Nano),
-					},
-				},
-			},
-			result: []error{models.ErrTaskNotFound},
-		},
 
 		"delete multiple tasks": {
 			inputIDs: []string{"task1", "task2"},
@@ -566,7 +434,7 @@ func TestStorage_Delete(t *testing.T) {
 			t.Parallel()
 
 			for i, id := range test.inputIDs {
-				err := test.storage.Delete(id)
+				err := test.storage.Delete(context.Background(), id)
 				result := test.result[i]
 
 				if !errors.Is(err, result) {
@@ -577,9 +445,9 @@ func TestStorage_Delete(t *testing.T) {
 					return
 				}
 
-				_, err = test.storage.Get(id)
-				if !errors.Is(err, models.ErrTaskNotFound) {
-					t.Fatalf("test-case: (%q); task hasn't been deleted, get method return: %q", name, err)
+				exists, _ := test.storage.Exists(context.Background(), id)
+				if exists {
+					t.Fatalf("test-case: (%q); task hasn't been deleted, exists method return: %v", name, exists)
 				}
 
 				fmt.Println("Task was deleted successfully")
@@ -696,7 +564,7 @@ func TestStorage_GetAll(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			tasks, err := test.storage.GetAll()
+			tasks, err := test.storage.GetAll(context.Background())
 			resultTasks := test.result.resultTasks
 			resultError := test.result.resultError
 
@@ -709,7 +577,7 @@ func TestStorage_GetAll(t *testing.T) {
 			}
 
 			for _, expectedTask := range resultTasks {
-				actualTask, err := test.storage.Get(expectedTask.ID)
+				actualTask, err := test.storage.Get(context.Background(), expectedTask.ID)
 				if err != nil || expectedTask != actualTask {
 					t.Fatalf("test-case: %q; expected task %v, got %v", name, expectedTask, actualTask)
 				}

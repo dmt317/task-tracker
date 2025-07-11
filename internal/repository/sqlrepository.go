@@ -20,13 +20,13 @@ func NewPostgresTaskRepository(db *pgxpool.Pool) *PostgresTaskRepository {
 	}
 }
 
-func ConnectToDB(connString string) (*pgxpool.Pool, error) {
+func CreateDBPool(ctx context.Context, connString string) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing config: %v", err)
 	}
 
-	pool, err := pgxpool.NewWithConfig(context.Background(), config)
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("error connecting to db: %v", err)
 	}
@@ -34,14 +34,10 @@ func ConnectToDB(connString string) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-func (repo *PostgresTaskRepository) Add(task *models.Task) error {
-	if exists, _ := repo.Exists(task.ID); exists {
-		return models.ErrTaskExists
-	}
-
+func (repo *PostgresTaskRepository) Add(ctx context.Context, task *models.Task) error {
 	query := `INSERT INTO tasks (id, title, description, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`
 	_, err := repo.db.Exec(
-		context.Background(),
+		ctx,
 		query,
 		task.ID,
 		task.Title,
@@ -58,13 +54,9 @@ func (repo *PostgresTaskRepository) Add(task *models.Task) error {
 	return nil
 }
 
-func (repo *PostgresTaskRepository) Delete(id string) error {
-	if exists, _ := repo.Exists(id); !exists {
-		return models.ErrTaskNotFound
-	}
-
+func (repo *PostgresTaskRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM tasks WHERE id=$1`
-	_, err := repo.db.Exec(context.Background(), query, id)
+	_, err := repo.db.Exec(ctx, query, id)
 
 	if err != nil {
 		return fmt.Errorf("error deleting task: %v", err)
@@ -73,11 +65,11 @@ func (repo *PostgresTaskRepository) Delete(id string) error {
 	return nil
 }
 
-func (repo *PostgresTaskRepository) Exists(id string) (bool, error) {
+func (repo *PostgresTaskRepository) Exists(ctx context.Context, id string) (bool, error) {
 	var exists bool
 
 	query := `SELECT EXISTS(SELECT 1 FROM tasks WHERE id=$1)`
-	err := repo.db.QueryRow(context.Background(), query, id).Scan(&exists)
+	err := repo.db.QueryRow(ctx, query, id).Scan(&exists)
 
 	if err != nil {
 		return false, fmt.Errorf("error checking if task exists: %v", err)
@@ -86,11 +78,11 @@ func (repo *PostgresTaskRepository) Exists(id string) (bool, error) {
 	return exists, nil
 }
 
-func (repo *PostgresTaskRepository) Get(id string) (models.Task, error) {
+func (repo *PostgresTaskRepository) Get(ctx context.Context, id string) (models.Task, error) {
 	var task models.Task
 
 	query := `SELECT id, title, description, status, created_at, updated_at FROM tasks WHERE id=$1`
-	err := repo.db.QueryRow(context.Background(), query, id).Scan(
+	err := repo.db.QueryRow(ctx, query, id).Scan(
 		&task.ID,
 		&task.Title,
 		&task.Description,
@@ -106,9 +98,9 @@ func (repo *PostgresTaskRepository) Get(id string) (models.Task, error) {
 	return task, nil
 }
 
-func (repo *PostgresTaskRepository) GetAll() ([]models.Task, error) {
+func (repo *PostgresTaskRepository) GetAll(ctx context.Context) ([]models.Task, error) {
 	query := `SELECT id, title, description, status, created_at, updated_at FROM tasks`
-	rows, err := repo.db.Query(context.Background(), query)
+	rows, err := repo.db.Query(ctx, query)
 
 	if err != nil {
 		return []models.Task{}, fmt.Errorf("error getting tasks: %v", err)
@@ -143,16 +135,11 @@ func (repo *PostgresTaskRepository) GetAll() ([]models.Task, error) {
 	return tasks, nil
 }
 
-func (repo *PostgresTaskRepository) Update(updatedTask *models.Task) error {
-	exists, _ := repo.Exists(updatedTask.ID)
-	if !exists {
-		return models.ErrTaskNotFound
-	}
-
+func (repo *PostgresTaskRepository) Update(ctx context.Context, updatedTask *models.Task) error {
 	query := `UPDATE tasks SET title=$1, description=$2, status=$3, updated_at=$4 WHERE id=$5`
 	updatedTask.UpdatedAt = time.Now().Format(time.RFC3339Nano)
 	_, err := repo.db.Exec(
-		context.Background(),
+		ctx,
 		query,
 		updatedTask.Title,
 		updatedTask.Description,
