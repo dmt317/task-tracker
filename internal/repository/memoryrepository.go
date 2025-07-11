@@ -44,6 +44,15 @@ func (repo *MemoryTaskRepository) Delete(id string) error {
 	return nil
 }
 
+func (repo *MemoryTaskRepository) Exists(id string) (bool, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	_, found := repo.store[id]
+
+	return found, nil
+}
+
 func (repo *MemoryTaskRepository) Get(id string) (models.Task, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()

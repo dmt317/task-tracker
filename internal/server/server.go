@@ -20,11 +20,9 @@ type HTTPServer struct {
 	taskService service.TaskService
 }
 
-func NewHTTPServer(config config.Config, repo repository.TaskRepository) *HTTPServer {
+func NewHTTPServer(config config.Config) *HTTPServer {
 	return &HTTPServer{
-		config:      config,
-		logger:      log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags),
-		taskService: service.NewDefaultTaskService(repo),
+		config: config,
 	}
 }
 
@@ -37,7 +35,36 @@ func (s *HTTPServer) setupRoutes(mux *http.ServeMux) {
 	mux.Handle("/swagger/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
 }
 
-func (s *HTTPServer) StartHTTPServer() {
+func (s *HTTPServer) configureServer() error {
+	pool, err := repository.ConnectToDB(s.config.DBConn)
+	if err != nil {
+		return err
+	}
+
+	repo := repository.NewPostgresTaskRepository(pool)
+
+	s.taskService = service.NewDefaultTaskService(repo)
+
+	s.logger = log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags)
+
+	return nil
+}
+
+func (s *HTTPServer) Start() error {
+	err := s.configureServer()
+	if err != nil {
+		return err
+	}
+
+	return s.startHTTPServer()
+}
+
+func (s *HTTPServer) startHTTPServer() error {
+	err := s.configureServer()
+	if err != nil {
+		return err
+	}
+
 	mux := http.NewServeMux()
 
 	s.setupRoutes(mux)
@@ -70,4 +97,6 @@ func (s *HTTPServer) StartHTTPServer() {
 	}
 
 	s.logger.Println("Server gracefully shut down")
+
+	return server.Shutdown(ctx)
 }

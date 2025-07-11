@@ -1,5 +1,6 @@
 # Golang binaries and build artifacts
 bin/
+/database/
 
 # Editor and IDE Files
 .idea

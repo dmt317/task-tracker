@@ -5,58 +5,83 @@ import (
 	"testing"
 )
 
-func TestLoadConfig(t *testing.T) {
-	originalPort, hasPort := os.LookupEnv("PORT")
-	defer func() {
-		if hasPort {
-			os.Setenv("PORT", originalPort)
-		} else {
-			os.Unsetenv("PORT")
-		}
-	}()
-
-	assertPort := func(expected string) {
-		t.Helper()
-
-		config := LoadConfig()
-
-		if config.ServerPort != expected {
-			t.Fatalf("Expected port %s, got %s", expected, config.ServerPort)
-		}
-	}
-
-	// Тест: значение по умолчанию (переменная не установлена)
+func unsetEnvVars() {
 	os.Unsetenv("PORT")
-	assertPort("8080")
-
-	// Тест: установка переменной окружения
-	os.Setenv("PORT", "5000")
-	assertPort("5000")
+	os.Unsetenv("DB_CONN")
 }
 
-func TestGetEnv(t *testing.T) {
-	originalValue, hasValue := os.LookupEnv("TEST_KEY")
-	defer func() {
-		if hasValue {
-			os.Setenv("TEST_KEY", originalValue)
-		} else {
-			os.Unsetenv("TEST_KEY")
-		}
-	}()
+type EnvVar struct {
+	key   string
+	value string
+	set   bool
+}
 
-	assertEnv := func(key, defaultValue, expected string) {
-		t.Helper()
+func getOriginalEnv(keys []string) []EnvVar {
+	originalEnv := make([]EnvVar, 0, len(keys))
 
-		if value := getEnv(key, defaultValue); value != expected {
-			t.Fatalf("getEnv(%s) = %s; want %s", key, value, expected)
-		}
+	for _, key := range keys {
+		val, ok := os.LookupEnv(key)
+		originalEnv = append(originalEnv, EnvVar{
+			key:   key,
+			value: val,
+			set:   ok,
+		})
 	}
 
-	// Тест: если переменная НЕ установлена, должно вернуться значение по умолчанию
-	os.Unsetenv("TEST_KEY")
-	assertEnv("TEST_KEY", "default_value", "default_value")
+	return originalEnv
+}
 
-	// Тест: если переменная установлена, должно вернуться её значение
-	os.Setenv("TEST_KEY", "env_value")
-	assertEnv("TEST_KEY", "default_value", "env_value")
+func restoreOriginalEnv(originalEnv []EnvVar) {
+	for _, envVar := range originalEnv {
+		if envVar.set {
+			os.Setenv(envVar.key, envVar.value)
+		} else {
+			os.Unsetenv(envVar.key)
+		}
+	}
+}
+
+func TestLoadConfig(t *testing.T) {
+	tests := map[string]struct {
+		setEnv map[string]string
+		result Config
+	}{
+		"load config from .env file": {
+			setEnv: map[string]string{
+				"PORT":    "5001",
+				"DB_CONN": "user=postgres password=postgres host=localhost port=5432 dbname=tasktracker",
+			},
+			result: Config{
+				ServerPort: "5001",
+				DBConn:     "user=postgres password=postgres host=localhost port=5432 dbname=tasktracker",
+			},
+		},
+
+		"load config with defaults": {
+			setEnv: map[string]string{},
+			result: Config{
+				ServerPort: "8080",
+				DBConn:     "user=postgres password=secret host=localhost port=5432 dbname=tasktracker",
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			originalEnv := getOriginalEnv([]string{"PORT", "DB_CONN"})
+			defer restoreOriginalEnv(originalEnv)
+
+			unsetEnvVars()
+
+			for k, v := range test.setEnv {
+				os.Setenv(k, v)
+			}
+
+			config := LoadConfig()
+
+			if *config != test.result {
+				t.Fatalf("test-case: (%q); returned [%+v]; expected [%+v]", name, config, test.result)
+			}
+		})
+	}
 }
