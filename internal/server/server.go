@@ -18,6 +18,7 @@ type HTTPServer struct {
 	config      config.Config
 	logger      *log.Logger
 	taskService service.TaskService
+	server      *http.Server
 }
 
 func NewHTTPServer(config config.Config) *HTTPServer {
@@ -41,10 +42,15 @@ func (s *HTTPServer) configureServer(ctx context.Context) error {
 		return err
 	}
 
-	repo := repository.NewPostgresTaskRepository(pool)
+	var repo repository.TaskRepository
+
+	if s.config.InMemory == "True" {
+		repo = repository.NewMemoryTaskRepository()
+	} else {
+		repo = repository.NewPostgresTaskRepository(pool)
+	}
 
 	s.taskService = service.NewDefaultTaskService(repo)
-
 	s.logger = log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags)
 
 	return nil
@@ -54,6 +60,14 @@ func (s *HTTPServer) Start() error {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return s.startHTTPServer(ctx, cancel)
+}
+
+func (s *HTTPServer) Stop(ctx context.Context) error {
+	if s.server == nil {
+		return nil
+	}
+
+	return s.server.Shutdown(ctx)
 }
 
 func (s *HTTPServer) startHTTPServer(ctx context.Context, cancel context.CancelFunc) error {
@@ -66,7 +80,7 @@ func (s *HTTPServer) startHTTPServer(ctx context.Context, cancel context.CancelF
 
 	s.setupRoutes(mux)
 
-	server := &http.Server{
+	s.server = &http.Server{
 		Addr:              ":" + s.config.ServerPort,
 		Handler:           mux,
 		ReadHeaderTimeout: 10 * time.Second,
@@ -78,7 +92,7 @@ func (s *HTTPServer) startHTTPServer(ctx context.Context, cancel context.CancelF
 	go func() {
 		s.logger.Println("Starting HTTP server on port", s.config.ServerPort)
 
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			s.logger.Fatalf("Server failed: %v", err)
 		}
 	}()
@@ -91,11 +105,11 @@ func (s *HTTPServer) startHTTPServer(ctx context.Context, cancel context.CancelF
 	shutdownCtx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdown()
 
-	if err := server.Shutdown(shutdownCtx); err != nil {
+	if err := s.server.Shutdown(shutdownCtx); err != nil {
 		s.logger.Fatalf("Server forced to shutdown: %v", err)
 	}
 
 	s.logger.Println("Server gracefully shut down")
 
-	return server.Shutdown(shutdownCtx)
+	return s.server.Shutdown(shutdownCtx)
 }
