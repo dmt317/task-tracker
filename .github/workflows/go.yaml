@@ -45,10 +45,6 @@ jobs:
         run: |
           docker compose up -d postgres migrate
 
-          while ! docker logs migrations 2>&1 | grep -q "No change"; do
-            sleep 2
-          done
-
           go test -v -race ./...
 
           docker compose down
