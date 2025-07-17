@@ -40,6 +40,8 @@ jobs:
           version: latest
 
       - name: Start services and run tests
+        env:
+          PORT: "8080"
         run: |
           docker compose up -d postgres migrate
 

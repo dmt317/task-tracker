@@ -45,7 +45,7 @@ func TestGetTask(t *testing.T) {
 		require.NoErrorf(t, err, "failed to decode response: %v", err)
 
 		getResp, err := env.Server.Handle(http.MethodGet, "/tasks/"+createdTask.ID, http.NoBody, nil)
-		require.NoErrorf(t, err, "failed to send request: %v", err)
+		require.NoErrorf(t, err, "failed to send get request: %v", err)
 
 		defer getResp.Body.Close()
 
@@ -70,7 +70,7 @@ func TestGetTask(t *testing.T) {
 		nonExistentID := uuid.New().String()
 
 		resp, err := env.Server.Handle(http.MethodGet, "/tasks/"+nonExistentID, http.NoBody, nil)
-		require.NoErrorf(t, err, "failed to send post request: %v", err)
+		require.NoErrorf(t, err, "failed to send get request: %v", err)
 
 		defer resp.Body.Close()
 
