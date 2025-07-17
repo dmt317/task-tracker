@@ -75,6 +75,6 @@ func runMigrations(t *testing.T, dbName string) {
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
-		t.Fatalf("error running migrations for database %s: %v\n%s", dbName, err, output)
+		t.Fatalf("error running migrations for db %s: %v\n%s", dbName, err, output)
 	}
 }
