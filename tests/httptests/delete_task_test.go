@@ -20,7 +20,7 @@ func TestDeleteTask(t *testing.T) {
 
 		task := models.CreateTaskRequest{
 			Title:       "Task to delete",
-			Description: "To be removed",
+			Description: "To be removed (",
 			Status:      "todo",
 		}
 

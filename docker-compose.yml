@@ -16,7 +16,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: tasktracker
     volumes:
-      - ./database:/var/lib/postgresql/data
+      - ./.docker/database:/var/lib/postgresql/data
     networks:
       - main
     healthcheck:

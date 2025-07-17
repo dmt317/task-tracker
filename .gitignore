@@ -1,6 +1,7 @@
 # Golang binaries and build artifacts
 bin/
 /database/
+.docker
 
 # Editor and IDE Files
 .idea

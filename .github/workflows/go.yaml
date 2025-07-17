@@ -43,14 +43,14 @@ jobs:
         env:
           PORT: "8080"
         run: |
-          mkdir -p ./database
-          chmod 777 ./database
+          mkdir -p .docker/database
+          chmod 777 .docker/database
 
           docker compose up -d postgres migrate
       - name: Test
         run: |
-          go test -v -race $(go list ./... | grep -v /database)
+          go test ./...
       - name: Shutdown services
         run: |
           docker compose down
-          rm -rf ./database
+          rm -rf .docker/database
