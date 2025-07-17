@@ -43,8 +43,13 @@ jobs:
         env:
           PORT: "8080"
         run: |
+          mkdir -p ./database
+          chmod 777 ./database
+
           docker compose up -d postgres migrate
 
           go test -v -race ./...
 
           docker compose down
+
+          rm -rf ./database

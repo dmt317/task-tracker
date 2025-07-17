@@ -50,7 +50,7 @@ func TestUpdateTask(t *testing.T) {
 		require.NoErrorf(t, err, "failed to marshal task request: %v", err)
 
 		updateResp, err := env.Server.Handle(http.MethodPatch, "/tasks/"+created.ID, bytes.NewReader(updateBody), headers)
-		require.NoErrorf(t, err, "failed to send request: %v", err)
+		require.NoErrorf(t, err, "failed to send patch request: %v", err)
 
 		defer updateResp.Body.Close()
 
