@@ -70,7 +70,7 @@ func TestGetTask(t *testing.T) {
 		nonExistentID := uuid.New().String()
 
 		resp, err := env.Server.Handle(http.MethodGet, "/tasks/"+nonExistentID, http.NoBody, nil)
-		require.NoErrorf(t, err, "failed to send request: %v", err)
+		require.NoErrorf(t, err, "failed to send post request: %v", err)
 
 		defer resp.Body.Close()
 
