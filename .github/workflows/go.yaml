@@ -55,9 +55,3 @@ jobs:
       - name: Test
         run: |
           go test ./...
-      - name: Shutdown services
-        env:
-          PORT: "8080"
-        run: |
-          docker compose down
-          rm -rf .docker/database

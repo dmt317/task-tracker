@@ -80,7 +80,7 @@ func TestUpdateTask(t *testing.T) {
 
 		updateTask := models.UpdateTaskRequest{
 			Title:       "Test",
-			Description: "Desc",
+			Description: "Description",
 			Status:      "todo",
 		}
 		body, err := json.Marshal(updateTask)
