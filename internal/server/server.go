@@ -1,9 +1,12 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,6 +22,7 @@ type HTTPServer struct {
 	logger      *log.Logger
 	taskService service.TaskService
 	server      *http.Server
+	mux         *http.ServeMux
 }
 
 func NewHTTPServer(config config.Config) *HTTPServer {
@@ -36,7 +40,27 @@ func (s *HTTPServer) setupRoutes(mux *http.ServeMux) {
 	mux.Handle("/swagger/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
 }
 
-func (s *HTTPServer) configureServer(ctx context.Context) error {
+func (s *HTTPServer) Handle(method, path string, body io.Reader, headers map[string]string) (*http.Response, error) {
+	req := httptest.NewRequest(method, path, body)
+
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	rr := httptest.NewRecorder()
+
+	s.mux.ServeHTTP(rr, req)
+
+	res := &http.Response{
+		StatusCode: rr.Code,
+		Body:       io.NopCloser(bytes.NewReader(rr.Body.Bytes())),
+		Header:     rr.Header(),
+	}
+
+	return res, nil
+}
+
+func (s *HTTPServer) ConfigureServer(ctx context.Context) error {
 	pool, err := repository.CreateDBPool(ctx, s.config.DBConn)
 	if err != nil {
 		return err
@@ -53,39 +77,28 @@ func (s *HTTPServer) configureServer(ctx context.Context) error {
 	s.taskService = service.NewDefaultTaskService(repo)
 	s.logger = log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags)
 
-	return nil
-}
+	s.mux = http.NewServeMux()
 
-func (s *HTTPServer) Start() error {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	return s.startHTTPServer(ctx, cancel)
-}
-
-func (s *HTTPServer) Stop(ctx context.Context) error {
-	if s.server == nil {
-		return nil
-	}
-
-	return s.server.Shutdown(ctx)
-}
-
-func (s *HTTPServer) startHTTPServer(ctx context.Context, cancel context.CancelFunc) error {
-	err := s.configureServer(ctx)
-	if err != nil {
-		return err
-	}
-
-	mux := http.NewServeMux()
-
-	s.setupRoutes(mux)
+	s.setupRoutes(s.mux)
 
 	s.server = &http.Server{
 		Addr:              ":" + s.config.ServerPort,
-		Handler:           mux,
+		Handler:           s.mux,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
+	return nil
+}
+
+func (s *HTTPServer) Start(cancel context.CancelFunc) error {
+	return s.startHTTPServer(cancel)
+}
+
+func (s *HTTPServer) Stop(ctx context.Context) error {
+	return s.server.Shutdown(ctx)
+}
+
+func (s *HTTPServer) startHTTPServer(cancel context.CancelFunc) error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 

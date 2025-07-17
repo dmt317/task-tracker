@@ -3,9 +3,7 @@ package testutils
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -14,8 +12,8 @@ import (
 )
 
 type TestEnv struct {
-	DBName    string
-	ServerURL string
+	DBName string
+	Server *server.HTTPServer
 }
 
 func SetupIntegrationTest(t *testing.T) *TestEnv {
@@ -27,54 +25,25 @@ func SetupIntegrationTest(t *testing.T) *TestEnv {
 
 	cfg := config.Config{
 		DBConn:     fmt.Sprintf("postgres://postgres:postgres@localhost:5432/%s?sslmode=disable", dbName),
-		ServerPort: "8080",
+		ServerPort: "5050",
 		InMemory:   "False",
 	}
 
 	server := server.NewHTTPServer(cfg)
 
-	go func() {
-		if err := server.Start(); err != nil {
-			panic(err)
-		}
-	}()
-
-	waitForServer(t, "http://localhost:"+cfg.ServerPort)
-
-	t.Cleanup(func() {
-		ctx, shutdown := context.WithTimeout(context.Background(), 2*time.Second)
-		defer shutdown()
-
-		err := server.Stop(ctx)
-		if err != nil {
-			t.Fatalf("failed to shutdown test server: %v", err)
-		}
-
-		dropTestDatabase(t, dbName)
-	})
+	err := server.ConfigureServer(context.Background())
+	if err != nil {
+		panic(err)
+	}
 
 	return &TestEnv{
-		DBName:    dbName,
-		ServerURL: "http://localhost:" + cfg.ServerPort,
+		DBName: dbName,
+		Server: server,
 	}
 }
 
-func waitForServer(t *testing.T, url string) {
-	t.Helper()
-
-	const retries = 20
-
-	const delay = 250 * time.Millisecond
-
-	for i := 0; i < retries; i++ {
-		resp, err := http.Get(url + "/swagger")
-		if err == nil && resp.StatusCode < 500 {
-			resp.Body.Close()
-			return
-		}
-
-		time.Sleep(delay)
-	}
-
-	t.Fatalf("server did not start on %s after %d attempts", url, retries)
+func (env *TestEnv) CleanUpTest(t *testing.T) {
+	t.Cleanup(func() {
+		dropTestDatabase(t, env.DBName)
+	})
 }

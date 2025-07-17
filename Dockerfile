@@ -15,6 +15,6 @@ WORKDIR /root
 
 COPY --from=builder /app/bin/main .
 COPY --from=builder /app/.env .
-COPY --from=builder /app/docs/ .
+COPY --from=builder /app/docs/ ./docs
 
 CMD ["./main"]

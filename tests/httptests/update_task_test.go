@@ -13,81 +13,89 @@ import (
 )
 
 func TestUpdateTask(t *testing.T) {
+	t.Parallel()
+
 	t.Run("happy path - update task", func(t *testing.T) {
 		env := testutils.SetupIntegrationTest(t)
 
-		createReq := models.CreateTaskRequest{
+		task := models.CreateTaskRequest{
 			Title:       "Old Title",
 			Description: "Old Description",
 			Status:      "todo",
 		}
-		body, _ := json.Marshal(createReq)
-		resp, err := http.Post(env.ServerURL+"/tasks", "application/json", bytes.NewReader(body))
+		body, err := json.Marshal(task)
+		require.NoErrorf(t, err, "failed to marshal task request: %v", err)
 
-		require.NoError(t, err)
+		headers := map[string]string{
+			"Content-Type": "application/json",
+		}
+		resp, err := env.Server.Handle(http.MethodPost, "/tasks", bytes.NewReader(body), headers)
+		require.NoErrorf(t, err, "failed to send request: %v", err)
 
 		defer resp.Body.Close()
 
-		require.Equal(t, http.StatusCreated, resp.StatusCode)
+		require.Equalf(t, http.StatusCreated, resp.StatusCode, "expected status %d, got %d", http.StatusCreated, resp.StatusCode)
 
 		var created models.Task
 
 		err = json.NewDecoder(resp.Body).Decode(&created)
-		require.NoError(t, err)
+		require.NoErrorf(t, err, "failed to decode response: %v", err)
 
-		updateReq := models.UpdateTaskRequest{
+		updateTask := models.UpdateTaskRequest{
 			Title:       "New Title",
 			Description: "New Description",
 			Status:      "in_progress",
 		}
-		updateBody, _ := json.Marshal(updateReq)
+		updateBody, err := json.Marshal(updateTask)
+		require.NoErrorf(t, err, "failed to marshal task request: %v", err)
 
-		req, _ := http.NewRequest(http.MethodPatch, env.ServerURL+"/tasks/"+created.ID, bytes.NewReader(updateBody))
-		req.Header.Set("Content-Type", "application/json")
+		updateResp, err := env.Server.Handle(http.MethodPatch, "/tasks/"+created.ID, bytes.NewReader(updateBody), headers)
+		require.NoErrorf(t, err, "failed to send request: %v", err)
 
-		client := &http.Client{}
-		resp, err = client.Do(req)
-		require.NoError(t, err)
+		defer updateResp.Body.Close()
 
-		defer resp.Body.Close()
-		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+		require.Equal(t, http.StatusNoContent, updateResp.StatusCode, "expected status %d, got %d", http.StatusNoContent, resp.StatusCode)
 
-		resp, err = http.Get(env.ServerURL + "/tasks/" + created.ID)
-		require.NoError(t, err)
+		resp, err = env.Server.Handle(http.MethodGet, "/tasks/"+created.ID, http.NoBody, nil)
+		require.NoErrorf(t, err, "failed to send request: %v", err)
 
 		defer resp.Body.Close()
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.Equalf(t, http.StatusOK, resp.StatusCode, "expected status %d, got %d", http.StatusOK, resp.StatusCode)
 
-		var updated models.Task
+		var updatedTask models.Task
 
-		err = json.NewDecoder(resp.Body).Decode(&updated)
-		require.NoError(t, err)
+		err = json.NewDecoder(resp.Body).Decode(&updatedTask)
+		require.NoErrorf(t, err, "failed to decode response: %v", err)
 
-		require.Equal(t, "New Title", updated.Title)
-		require.Equal(t, "New Description", updated.Description)
-		require.Equal(t, "in_progress", updated.Status)
+		require.Equal(t, updateTask.Title, updatedTask.Title)
+		require.Equal(t, updateTask.Description, updatedTask.Description)
+		require.Equal(t, updateTask.Status, updatedTask.Status)
+
+		env.CleanUpTest(t)
 	})
 
 	t.Run("unhappy path - update non-existent task", func(t *testing.T) {
 		env := testutils.SetupIntegrationTest(t)
 
-		updateReq := models.UpdateTaskRequest{
+		updateTask := models.UpdateTaskRequest{
 			Title:       "Test",
 			Description: "Desc",
 			Status:      "todo",
 		}
-		body, _ := json.Marshal(updateReq)
+		body, err := json.Marshal(updateTask)
+		require.NoErrorf(t, err, "failed to marshal task request: %v", err)
 
-		req, _ := http.NewRequest(http.MethodPatch, env.ServerURL+"/tasks/nonexistent-id", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		require.NoError(t, err)
+		headers := map[string]string{
+			"Content-Type": "application/json",
+		}
+		resp, err := env.Server.Handle(http.MethodPatch, "/tasks/"+"non-existent", bytes.NewReader(body), headers)
+		require.NoErrorf(t, err, "failed to send request: %v", err)
 
 		defer resp.Body.Close()
 
-		require.Equal(t, http.StatusNotFound, resp.StatusCode)
+		require.Equalf(t, http.StatusNotFound, resp.StatusCode, "expected status %d, got %d", http.StatusNotFound, resp.StatusCode)
+
+		env.CleanUpTest(t)
 	})
 }

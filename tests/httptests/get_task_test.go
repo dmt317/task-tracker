@@ -3,7 +3,6 @@ package httptests
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -16,46 +15,53 @@ import (
 )
 
 func TestGetTask(t *testing.T) {
+	t.Parallel()
+
 	t.Run("happy path - get existing task", func(t *testing.T) {
 		env := testutils.SetupIntegrationTest(t)
 
-		createReq := models.CreateTaskRequest{
+		task := models.CreateTaskRequest{
 			Title:       "Integration Test Task",
 			Description: "Some description",
 			Status:      "todo",
 		}
 
-		reqBody, err := json.Marshal(createReq)
-		require.NoError(t, err)
+		body, err := json.Marshal(task)
+		require.NoErrorf(t, err, "failed to marshal task request: %v", err)
 
-		resp, err := http.Post(env.ServerURL+"/tasks", "application/json", bytes.NewReader(reqBody))
-		require.NoError(t, err)
+		headers := map[string]string{
+			"Content-Type": "application/json",
+		}
+		resp, err := env.Server.Handle(http.MethodPost, "/tasks", bytes.NewReader(body), headers)
+		require.NoErrorf(t, err, "failed to send post request: %v", err)
 
 		defer resp.Body.Close()
 
-		require.Equal(t, http.StatusCreated, resp.StatusCode)
+		require.Equalf(t, http.StatusCreated, resp.StatusCode, "expected status %d, got %d", http.StatusCreated, resp.StatusCode)
 
-		var created models.Task
+		var createdTask models.Task
 
-		err = json.NewDecoder(resp.Body).Decode(&created)
-		require.NoError(t, err)
+		err = json.NewDecoder(resp.Body).Decode(&createdTask)
+		require.NoErrorf(t, err, "failed to decode response: %v", err)
 
-		getResp, err := http.Get(fmt.Sprintf("%s/tasks/%s", env.ServerURL, created.ID))
-		require.NoError(t, err)
+		getResp, err := env.Server.Handle(http.MethodGet, "/tasks/"+createdTask.ID, http.NoBody, nil)
+		require.NoErrorf(t, err, "failed to send request: %v", err)
 
 		defer getResp.Body.Close()
 
-		require.Equal(t, http.StatusOK, getResp.StatusCode)
+		require.Equalf(t, http.StatusOK, getResp.StatusCode, "expected status %d, got %d", http.StatusOK, getResp.StatusCode)
 
 		var fetched models.Task
 
 		err = json.NewDecoder(getResp.Body).Decode(&fetched)
-		require.NoError(t, err)
+		require.NoErrorf(t, err, "failed to decode response: %v", err)
 
-		require.Equal(t, created.ID, fetched.ID)
-		require.Equal(t, created.Title, fetched.Title)
-		require.Equal(t, created.Description, fetched.Description)
-		require.Equal(t, created.Status, fetched.Status)
+		require.Equal(t, createdTask.ID, fetched.ID)
+		require.Equal(t, createdTask.Title, fetched.Title)
+		require.Equal(t, createdTask.Description, fetched.Description)
+		require.Equal(t, createdTask.Status, fetched.Status)
+
+		env.CleanUpTest(t)
 	})
 
 	t.Run("unhappy path - task not found", func(t *testing.T) {
@@ -63,16 +69,16 @@ func TestGetTask(t *testing.T) {
 
 		nonExistentID := uuid.New().String()
 
-		resp, err := http.Get(fmt.Sprintf("%s/tasks/%s", env.ServerURL, nonExistentID))
-		require.NoError(t, err)
+		resp, err := env.Server.Handle(http.MethodGet, "/tasks/"+nonExistentID, http.NoBody, nil)
+		require.NoErrorf(t, err, "failed to send request: %v", err)
 
 		defer resp.Body.Close()
 
-		require.Equal(t, http.StatusNotFound, resp.StatusCode)
+		require.Equalf(t, http.StatusNotFound, resp.StatusCode, "expected status %d, got %d", http.StatusNotFound, resp.StatusCode)
 
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
+		_, err = io.ReadAll(resp.Body)
+		require.NoErrorf(t, err, "failed to read response: %v", err)
 
-		t.Logf("server responded with: %s", string(body))
+		env.CleanUpTest(t)
 	})
 }

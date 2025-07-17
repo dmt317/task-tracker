@@ -13,56 +13,59 @@ import (
 )
 
 func TestDeleteTask(t *testing.T) {
+	t.Parallel()
+
 	t.Run("happy path - delete task", func(t *testing.T) {
 		env := testutils.SetupIntegrationTest(t)
-		createReq := models.CreateTaskRequest{
+
+		task := models.CreateTaskRequest{
 			Title:       "Task to delete",
 			Description: "To be removed",
 			Status:      "todo",
 		}
-		body, _ := json.Marshal(createReq)
-		resp, err := http.Post(env.ServerURL+"/tasks", "application/json", bytes.NewReader(body))
 
-		require.NoError(t, err)
+		body, err := json.Marshal(task)
+		require.NoErrorf(t, err, "failed to marshal task request: %v", err)
+
+		headers := map[string]string{
+			"Content-Type": "application/json",
+		}
+		resp, err := env.Server.Handle(http.MethodPost, "/tasks", bytes.NewReader(body), headers)
+		require.NoErrorf(t, err, "failed to send post request: %v", err)
 
 		defer resp.Body.Close()
 
-		require.Equal(t, http.StatusCreated, resp.StatusCode)
+		require.Equalf(t, http.StatusCreated, resp.StatusCode, "expected status %d, got %d", http.StatusCreated, resp.StatusCode)
 
 		var created models.Task
 
 		err = json.NewDecoder(resp.Body).Decode(&created)
+		require.NoErrorf(t, err, "failed to decode response: %v", err)
 
-		require.NoError(t, err)
-
-		req, _ := http.NewRequest(http.MethodDelete, env.ServerURL+"/tasks/"+created.ID, http.NoBody)
-		client := &http.Client{}
-		resp, err = client.Do(req)
-
-		require.NoError(t, err)
-
+		resp, err = env.Server.Handle(http.MethodDelete, "/tasks/"+created.ID, http.NoBody, nil)
+		require.NoErrorf(t, err, "failed to send delete request: %v", err)
 		defer resp.Body.Close()
 
-		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+		require.Equalf(t, http.StatusNoContent, resp.StatusCode, "expected status %d, got %d", http.StatusNoContent, resp.StatusCode)
 
-		resp, err = http.Get(env.ServerURL + "/tasks/" + created.ID)
-		require.NoError(t, err)
-
+		resp, err = env.Server.Handle(http.MethodGet, "/tasks/"+created.ID, http.NoBody, nil)
+		require.NoErrorf(t, err, "failed to send get request: %v", err)
 		defer resp.Body.Close()
 
-		require.Equal(t, http.StatusNotFound, resp.StatusCode)
+		require.Equalf(t, http.StatusNotFound, resp.StatusCode, "expected status %d, got %d", http.StatusNotFound, resp.StatusCode)
+
+		env.CleanUpTest(t)
 	})
 
 	t.Run("unhappy path - delete non-existent task", func(t *testing.T) {
 		env := testutils.SetupIntegrationTest(t)
 
-		req, _ := http.NewRequest(http.MethodDelete, env.ServerURL+"/tasks/nonexistent-id", http.NoBody)
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		require.NoError(t, err)
-
+		resp, err := env.Server.Handle(http.MethodDelete, "/tasks/nonexistent-id", http.NoBody, nil)
+		require.NoErrorf(t, err, "failed to send delete request: %v", err)
 		defer resp.Body.Close()
 
-		require.Equal(t, http.StatusNotFound, resp.StatusCode)
+		require.Equalf(t, http.StatusNotFound, resp.StatusCode, "expected status %d, got %d", http.StatusNotFound, resp.StatusCode)
+
+		env.CleanUpTest(t)
 	})
 }
