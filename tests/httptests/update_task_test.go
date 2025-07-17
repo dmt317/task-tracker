@@ -30,7 +30,7 @@ func TestUpdateTask(t *testing.T) {
 			"Content-Type": "application/json",
 		}
 		resp, err := env.Server.Handle(http.MethodPost, "/tasks", bytes.NewReader(body), headers)
-		require.NoErrorf(t, err, "failed to send request: %v", err)
+		require.NoErrorf(t, err, "failed to send post request: %v", err)
 
 		defer resp.Body.Close()
 

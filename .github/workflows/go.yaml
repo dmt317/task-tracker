@@ -39,7 +39,7 @@ jobs:
         with:
           version: latest
 
-      - name: Start services and run tests
+      - name: Start services
         env:
           PORT: "8080"
         run: |
@@ -47,9 +47,10 @@ jobs:
           chmod 777 ./database
 
           docker compose up -d postgres migrate
-
-          go test -v -race ./...
-
+      - name: Test
+        run: |
+          go test -v -race $(go list ./... | grep -v /database)
+      - name: Shutdown services
+        run: |
           docker compose down
-
           rm -rf ./database
