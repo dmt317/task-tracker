@@ -44,7 +44,7 @@ func TestUpdateTask(t *testing.T) {
 		updateTask := models.UpdateTaskRequest{
 			Title:       "New Title",
 			Description: "New Description",
-			Status:      "in_progress",
+			Status:      "in progress",
 		}
 		updateBody, err := json.Marshal(updateTask)
 		require.NoErrorf(t, err, "failed to marshal task request: %v", err)

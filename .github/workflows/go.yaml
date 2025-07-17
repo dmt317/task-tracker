@@ -29,15 +29,15 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      - name: Build
-        run: |
-          go mod tidy
-          go build -v ./...
-
       - name: Install migrate CLI
         run: |
           curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
           sudo mv migrate /usr/local/bin/
+
+      - name: Build
+        run: |
+          go mod tidy
+          go build -v ./...
 
       - name: Lint
         uses: golangci/golangci-lint-action@v4
@@ -56,6 +56,8 @@ jobs:
         run: |
           go test ./...
       - name: Shutdown services
+        env:
+          PORT: "8080"
         run: |
           docker compose down
           rm -rf .docker/database
