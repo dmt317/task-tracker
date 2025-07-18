@@ -13,9 +13,9 @@ import (
 )
 
 func TestDeleteTask(t *testing.T) {
-	t.Parallel()
-
 	t.Run("happy path - delete task", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		task := models.CreateTaskRequest{
@@ -58,6 +58,8 @@ func TestDeleteTask(t *testing.T) {
 	})
 
 	t.Run("unhappy path - delete non-existent task", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		resp, err := env.Server.Handle(http.MethodDelete, "/tasks/nonexistent-id", http.NoBody, nil)

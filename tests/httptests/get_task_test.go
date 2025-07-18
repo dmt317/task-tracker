@@ -15,9 +15,9 @@ import (
 )
 
 func TestGetTask(t *testing.T) {
-	t.Parallel()
-
 	t.Run("happy path - get existing task", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		task := models.CreateTaskRequest{
@@ -65,6 +65,8 @@ func TestGetTask(t *testing.T) {
 	})
 
 	t.Run("unhappy path - task not found", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		nonExistentID := uuid.New().String()

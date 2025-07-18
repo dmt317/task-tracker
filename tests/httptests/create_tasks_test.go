@@ -13,9 +13,9 @@ import (
 )
 
 func TestCreateTask(t *testing.T) {
-	t.Parallel()
-
 	t.Run("happy path - create valid task", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		task := models.CreateTaskRequest{
@@ -48,6 +48,8 @@ func TestCreateTask(t *testing.T) {
 	})
 
 	t.Run("unhappy path - empty title", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		task := models.CreateTaskRequest{

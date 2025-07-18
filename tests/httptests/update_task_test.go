@@ -13,9 +13,9 @@ import (
 )
 
 func TestUpdateTask(t *testing.T) {
-	t.Parallel()
-
 	t.Run("happy path - update task", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		task := models.CreateTaskRequest{
@@ -76,6 +76,8 @@ func TestUpdateTask(t *testing.T) {
 	})
 
 	t.Run("unhappy path - update non-existent task", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		updateTask := models.UpdateTaskRequest{

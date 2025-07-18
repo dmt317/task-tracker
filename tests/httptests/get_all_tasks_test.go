@@ -13,9 +13,9 @@ import (
 )
 
 func TestGetAllTasks(t *testing.T) {
-	t.Parallel()
-
 	t.Run("happy path - get all tasks", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		tasks := []models.CreateTaskRequest{
@@ -68,6 +68,8 @@ func TestGetAllTasks(t *testing.T) {
 	})
 
 	t.Run("unhappy path - no tasks in db", func(t *testing.T) {
+		t.Parallel()
+
 		env := testutils.SetupIntegrationTest(t)
 
 		resp, err := env.Server.Handle(http.MethodGet, "/tasks", http.NoBody, nil)
