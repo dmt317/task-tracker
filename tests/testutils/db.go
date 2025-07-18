@@ -53,7 +53,7 @@ func dropTestDatabase(t *testing.T, dbName string) {
 	`, dbName))
 
 	if err != nil {
-		t.Fatalf("error terminating connections to database %s: %v", dbName, err)
+		t.Fatalf("error terminating connections to db %s: %v", dbName, err)
 		return
 	}
 
