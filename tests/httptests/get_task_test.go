@@ -60,8 +60,6 @@ func TestGetTask(t *testing.T) {
 		require.Equal(t, createdTask.Title, fetched.Title)
 		require.Equal(t, createdTask.Description, fetched.Description)
 		require.Equal(t, createdTask.Status, fetched.Status)
-
-		env.CleanUpTest(t)
 	})
 
 	t.Run("unhappy path - task not found", func(t *testing.T) {
@@ -80,7 +78,5 @@ func TestGetTask(t *testing.T) {
 
 		_, err = io.ReadAll(resp.Body)
 		require.NoErrorf(t, err, "failed to read response: %v", err)
-
-		env.CleanUpTest(t)
 	})
 }

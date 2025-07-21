@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -19,18 +20,14 @@ func createTestDatabase(t *testing.T, dbName string) {
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, connStr)
 
-	if err != nil {
-		t.Fatalf("error connecting Postgres: %v", err)
-	}
+	require.NoErrorf(t, err, "error connecting Postgres: %v", err)
 
 	defer conn.Close(ctx)
 
 	query := fmt.Sprintf(`CREATE DATABASE "%v"`, dbName)
 	_, err = conn.Exec(ctx, query)
 
-	if err != nil {
-		t.Fatalf("error creating database %s: %v", dbName, err)
-	}
+	require.NoErrorf(t, err, "error creating database %s: %v", dbName, err)
 }
 
 func dropTestDatabase(t *testing.T, dbName string) {
@@ -39,10 +36,7 @@ func dropTestDatabase(t *testing.T, dbName string) {
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, connStr)
 
-	if err != nil {
-		t.Fatalf("error connecting Postgres: %v", err)
-		return
-	}
+	require.NoErrorf(t, err, "error connecting Postgres: %v", err)
 
 	defer conn.Close(ctx)
 
@@ -52,18 +46,12 @@ func dropTestDatabase(t *testing.T, dbName string) {
 		WHERE datname = '%s' AND pid <> pg_backend_pid()
 	`, dbName))
 
-	if err != nil {
-		t.Fatalf("error terminating connections to db %s: %v", dbName, err)
-		return
-	}
+	require.NoErrorf(t, err, "error terminating connections to db %s: %v", dbName, err)
 
 	query := fmt.Sprintf(`DROP DATABASE "%v"`, dbName)
 	_, err = conn.Exec(ctx, query)
 
-	if err != nil {
-		t.Fatalf("error dropping database %s: %v", dbName, err)
-		return
-	}
+	require.NoErrorf(t, err, "error dropping database %s: %v", dbName, err)
 }
 
 func runMigrations(t *testing.T, dbName string) {
@@ -74,7 +62,5 @@ func runMigrations(t *testing.T, dbName string) {
 
 	output, err := cmd.CombinedOutput()
 
-	if err != nil {
-		t.Fatalf("error running migrations for db %s: %v\n%s", dbName, err, output)
-	}
+	require.NoErrorf(t, err, "error running migrations for db %s: %v\n%s", dbName, err, output)
 }

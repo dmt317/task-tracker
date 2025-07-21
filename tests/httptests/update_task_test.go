@@ -71,8 +71,6 @@ func TestUpdateTask(t *testing.T) {
 		require.Equal(t, updateTask.Title, updatedTask.Title)
 		require.Equal(t, updateTask.Description, updatedTask.Description)
 		require.Equal(t, updateTask.Status, updatedTask.Status)
-
-		env.CleanUpTest(t)
 	})
 
 	t.Run("unhappy path - update non-existent task", func(t *testing.T) {
@@ -97,7 +95,5 @@ func TestUpdateTask(t *testing.T) {
 		defer resp.Body.Close()
 
 		require.Equalf(t, http.StatusNotFound, resp.StatusCode, "expected status %d, got %d", http.StatusNotFound, resp.StatusCode)
-
-		env.CleanUpTest(t)
 	})
 }

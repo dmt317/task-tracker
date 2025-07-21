@@ -8,7 +8,7 @@ run: build
 
 test:
 	docker-compose up --build -d postgres migrate
-	go test -cover ./...
+	go test -v -race -cover ./...
 	docker-compose down
 
 lint:

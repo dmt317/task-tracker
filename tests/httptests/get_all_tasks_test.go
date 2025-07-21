@@ -63,8 +63,6 @@ func TestGetAllTasks(t *testing.T) {
 		titles := []string{gottenTasks[0].Title, gottenTasks[1].Title}
 		require.Contains(t, titles, tasks[0].Title)
 		require.Contains(t, titles, tasks[1].Title)
-
-		env.CleanUpTest(t)
 	})
 
 	t.Run("unhappy path - no tasks in db", func(t *testing.T) {
@@ -84,7 +82,5 @@ func TestGetAllTasks(t *testing.T) {
 		require.NoErrorf(t, err, "failed to decode response: %v", err)
 
 		require.Len(t, gottenTasks, 0)
-
-		env.CleanUpTest(t)
 	})
 }

@@ -53,8 +53,6 @@ func TestDeleteTask(t *testing.T) {
 		defer resp.Body.Close()
 
 		require.Equalf(t, http.StatusNotFound, resp.StatusCode, "expected status %d, got %d", http.StatusNotFound, resp.StatusCode)
-
-		env.CleanUpTest(t)
 	})
 
 	t.Run("unhappy path - delete non-existent task", func(t *testing.T) {
@@ -67,7 +65,5 @@ func TestDeleteTask(t *testing.T) {
 		defer resp.Body.Close()
 
 		require.Equalf(t, http.StatusNotFound, resp.StatusCode, "expected status %d, got %d", http.StatusNotFound, resp.StatusCode)
-
-		env.CleanUpTest(t)
 	})
 }

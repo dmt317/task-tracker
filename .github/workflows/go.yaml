@@ -54,7 +54,7 @@ jobs:
           docker compose up -d postgres migrate
       - name: Test
         run: |
-          go test -coverprofile=coverage.txt ./...
+          go test -v -race -coverprofile=coverage.txt ./...
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

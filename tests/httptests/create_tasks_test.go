@@ -43,8 +43,6 @@ func TestCreateTask(t *testing.T) {
 		require.NoErrorf(t, err, "failed to decode response: %v", err)
 
 		require.Equalf(t, task.Title, createdTask.Title, "expected title %s, got %s", task.Title, createdTask.Title)
-
-		env.CleanUpTest(t)
 	})
 
 	t.Run("unhappy path - empty title", func(t *testing.T) {
@@ -70,7 +68,5 @@ func TestCreateTask(t *testing.T) {
 		defer resp.Body.Close()
 
 		require.Equalf(t, http.StatusBadRequest, resp.StatusCode, "expected status %d, got %d", http.StatusBadRequest, resp.StatusCode)
-
-		env.CleanUpTest(t)
 	})
 }

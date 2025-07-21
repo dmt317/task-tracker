@@ -23,6 +23,7 @@ type HTTPServer struct {
 	taskService service.TaskService
 	server      *http.Server
 	mux         *http.ServeMux
+	cancelFunc  context.CancelFunc
 }
 
 func NewHTTPServer(config config.Config) *HTTPServer {
@@ -90,15 +91,15 @@ func (s *HTTPServer) ConfigureServer(ctx context.Context) error {
 	return nil
 }
 
-func (s *HTTPServer) Start(cancel context.CancelFunc) error {
-	return s.startHTTPServer(cancel)
+func (s *HTTPServer) Start(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+
+	s.cancelFunc = cancel
+
+	return s.startHTTPServer(ctx)
 }
 
-func (s *HTTPServer) Stop(ctx context.Context) error {
-	return s.server.Shutdown(ctx)
-}
-
-func (s *HTTPServer) startHTTPServer(cancel context.CancelFunc) error {
+func (s *HTTPServer) startHTTPServer(ctx context.Context) error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
@@ -113,16 +114,18 @@ func (s *HTTPServer) startHTTPServer(cancel context.CancelFunc) error {
 	<-sigs
 	s.logger.Println("Shutting down server...")
 
-	cancel()
+	s.cancelFunc()
 
-	shutdownCtx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, shutdown := context.WithTimeout(ctx, 5*time.Second)
 	defer shutdown()
 
-	if err := s.server.Shutdown(shutdownCtx); err != nil {
+	err := s.server.Shutdown(shutdownCtx)
+
+	if err != nil {
 		s.logger.Fatalf("Server forced to shutdown: %v", err)
 	}
 
 	s.logger.Println("Server gracefully shut down")
 
-	return s.server.Shutdown(shutdownCtx)
+	return err
 }

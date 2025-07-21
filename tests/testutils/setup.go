@@ -36,10 +36,14 @@ func SetupIntegrationTest(t *testing.T) *TestEnv {
 		panic(err)
 	}
 
-	return &TestEnv{
+	env := &TestEnv{
 		DBName: dbName,
 		Server: server,
 	}
+
+	env.CleanUpTest(t)
+
+	return env
 }
 
 func (env *TestEnv) CleanUpTest(t *testing.T) {

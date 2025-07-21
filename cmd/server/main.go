@@ -12,14 +12,14 @@ func main() {
 
 	server := server.NewHTTPServer(*config)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := context.Background()
 
 	err := server.ConfigureServer(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	err = server.Start(cancel)
+	err = server.Start(ctx)
 	if err != nil {
 		panic(err)
 	}
