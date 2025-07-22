@@ -7,7 +7,9 @@ run: build
 	./bin/main
 
 test:
-	go test ./...
+	docker-compose up --build -d postgres migrate
+	go test -v -race -cover ./...
+	docker-compose down
 
 lint:
 	golangci-lint run --config=.golangci.yml

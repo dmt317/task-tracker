@@ -15,6 +15,7 @@ func LoadConfig() *Config {
 	return &Config{
 		ServerPort: getEnv("PORT", "8080"),
 		DBConn:     getEnv("DB_CONN", "user=postgres password=secret host=localhost port=5432 dbname=tasktracker"),
+		InMemory:   getEnv("IN_MEMORY", "False"),
 	}
 }
 
