@@ -6,6 +6,7 @@ info:
 
 servers:
 - url: "http://localhost:5001"
+- url: "http://51.250.99.81:5001"
 
 paths:
   /tasks:
