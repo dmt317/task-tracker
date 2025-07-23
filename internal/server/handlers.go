@@ -41,8 +41,8 @@ func (s *HTTPServer) handleTaskByID(w http.ResponseWriter, r *http.Request) {
 		s.handleGetTask(w, r)
 	case http.MethodDelete:
 		s.handleDeleteTask(w, r)
-	// case http.MethodPatch:
-	// 	s.handleUpdateTask(w, r)
+	case http.MethodPatch:
+		s.handleUpdateTask(w, r)
 	default:
 		s.handleError(w, r.RemoteAddr, models.ErrMethodNotAllowed)
 	}
