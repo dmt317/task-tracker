@@ -208,7 +208,7 @@ func TestUpdate(t *testing.T) {
 			result: nil,
 		},
 
-		"update task fails when task doesn't exist": {
+		"update task fails when task does not exist": {
 			service: &DefaultService{
 				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
