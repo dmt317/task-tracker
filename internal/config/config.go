@@ -7,6 +7,7 @@ import (
 type Config struct {
 	ServerPort string
 	DBConn     string
+	AuthDBConn string
 	InMemory   string
 }
 

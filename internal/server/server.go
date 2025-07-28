@@ -35,7 +35,19 @@ func NewHTTPServer(config config.Config) *HTTPServer {
 func (s *HTTPServer) setupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/tasks", s.handleTasks)
 	mux.HandleFunc("/tasks/{id}", s.handleTaskByID)
+
 	mux.HandleFunc("/swagger", s.handleSwagger)
+
+	mux.HandleFunc("/health", s.handleHealth)
+
+	mux.HandleFunc("/auth/register", s.handleAuth)
+	mux.HandleFunc("/auth/login", s.handleAuth)
+	mux.HandleFunc("/auth/refresh", s.handleAuth)
+	mux.HandleFunc("/auth/logout", s.handleAuth)
+
+	mux.HandleFunc("/users/me", s.handleUsers)
+	mux.HandleFunc("/users", s.handleUsers)
+	mux.HandleFunc("/users/{id}", s.handleUserByID)
 
 	mux.Handle("/swagger/static/", http.StripPrefix("/swagger/static/", http.FileServer(http.Dir("docs/static"))))
 	mux.Handle("/swagger/auth/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
