@@ -6,14 +6,12 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
-
-	"task-tracker/internal/config"
 )
 
 func TestPostgresConnection(t *testing.T) {
-	config := config.LoadConfig()
+	connStr := "postgres://postgres:postgres@localhost:5432/auth?sslmode=disable"
 
-	conn, err := pgx.Connect(context.Background(), config.AuthDBConn)
+	conn, err := pgx.Connect(context.Background(), connStr)
 
 	require.NoErrorf(t, err, "error connecting to auth DB: %v", err)
 
