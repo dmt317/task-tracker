@@ -38,7 +38,8 @@ func (s *HTTPServer) setupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/swagger", s.handleSwagger)
 
 	mux.Handle("/swagger/static/", http.StripPrefix("/swagger/static/", http.FileServer(http.Dir("docs/static"))))
-	mux.Handle("/swagger/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
+	mux.Handle("/swagger/auth/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
+	mux.Handle("/swagger/tasks/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
 }
 
 func (s *HTTPServer) Handle(method, path string, body io.Reader, headers map[string]string) (*http.Response, error) {
