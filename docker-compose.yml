@@ -14,9 +14,9 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: tasktracker
     volumes:
       - ./.docker/database:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
     networks:
       - main
     healthcheck:
