@@ -21,6 +21,10 @@ func (s *HTTPServer) handleTasks(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *HTTPServer) handleHealth(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
 func (s *HTTPServer) handleSwagger(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		s.handleError(w, r.RemoteAddr, models.ErrMethodNotAllowed)
@@ -148,6 +152,18 @@ func (s *HTTPServer) handleUpdateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *HTTPServer) handleAuth(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
+func (s *HTTPServer) handleUsers(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
+func (s *HTTPServer) handleUserByID(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusInternalServerError)
 }
 
 func (s *HTTPServer) handleError(w http.ResponseWriter, ip string, err error) {

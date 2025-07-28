@@ -1,18 +1,27 @@
-name: CI
+name: CI-auth
 
 on:
   push:
     branches:
       - "*"
     paths:
-      - "**.go"
       - "go.mod"
       - "go.sum"
       - "docker-compose.yml"
       - "Makefile"
       - ".golangci.yml"
       - "migrations/**"
-      - "Dockerfile"
+      - "docker/auth/Dockerfile"
+      - "cmd/**"
+      - "internal/config/**"
+      - "internal/models/user.go"
+      - "internal/models/error.go"
+      - "internal/repository/auth/**"
+      - "internal/server/**"
+      - "internal/jwt/**"
+      - "internal/service/auth/**"
+      - "tests/testutils/**"
+      - "tests/httptests/auth/**"
 
 jobs:
   build:
@@ -54,7 +63,13 @@ jobs:
           docker compose up -d postgres migrate
       - name: Test
         run: |
-          go test -v -race -coverprofile=coverage.txt ./...
+          go test -v -race -coverprofile=coverage.txt \
+          ./internal/config/... \
+          ./internal/repository/auth/... \
+          ./internal/service/auth/... \
+          ./internal/server/... \
+          ./internal/jwt/... \
+          ./tests/httptests/auth/...
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

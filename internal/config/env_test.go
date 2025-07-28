@@ -8,6 +8,7 @@ import (
 func unsetEnvVars() {
 	os.Unsetenv("PORT")
 	os.Unsetenv("DB_CONN")
+	os.Unsetenv("AUTH_DB_CONN")
 	os.Unsetenv("IN_MEMORY")
 }
 
@@ -49,13 +50,15 @@ func TestLoadConfig(t *testing.T) {
 	}{
 		"load config from .env file": {
 			setEnv: map[string]string{
-				"PORT":      "5001",
-				"DB_CONN":   "user=postgres password=postgres host=localhost port=5432 dbname=tasktracker",
-				"IN_MEMORY": "False",
+				"PORT":         "5001",
+				"DB_CONN":      "user=postgres password=postgres host=localhost port=5432 dbname=tasktracker",
+				"AUTH_DB_CONN": "user=postgres password=postgres host=localhost port=5432 dbname=auth",
+				"IN_MEMORY":    "False",
 			},
 			result: Config{
 				ServerPort: "5001",
 				DBConn:     "user=postgres password=postgres host=localhost port=5432 dbname=tasktracker",
+				AuthDBConn: "user=postgres password=postgres host=localhost port=5432 dbname=auth",
 				InMemory:   "False",
 			},
 		},
@@ -65,6 +68,7 @@ func TestLoadConfig(t *testing.T) {
 			result: Config{
 				ServerPort: "8080",
 				DBConn:     "user=postgres password=secret host=localhost port=5432 dbname=tasktracker",
+				AuthDBConn: "user=postgres password=secret host=localhost port=5432 dbname=auth",
 				InMemory:   "False",
 			},
 		},
@@ -72,7 +76,7 @@ func TestLoadConfig(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			originalEnv := getOriginalEnv([]string{"PORT", "DB_CONN", "IN_MEMORY"})
+			originalEnv := getOriginalEnv([]string{"PORT", "DB_CONN", "AUTH_DB_CONN", "IN_MEMORY"})
 			defer restoreOriginalEnv(originalEnv)
 
 			unsetEnvVars()

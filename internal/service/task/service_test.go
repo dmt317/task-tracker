@@ -1,4 +1,4 @@
-package service
+package task
 
 import (
 	"context"
@@ -6,17 +6,17 @@ import (
 	"testing"
 
 	"task-tracker/internal/models"
-	"task-tracker/internal/repository"
+	taskrepo "task-tracker/internal/repository/task"
 )
 
 func TestAdd(t *testing.T) {
 	tests := map[string]struct {
-		service *DefaultTaskService
+		service *DefaultService
 		result  error
 	}{
 		"successfully adds a valid task": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
 					IsExist:              false,
 				},
@@ -25,8 +25,8 @@ func TestAdd(t *testing.T) {
 		},
 
 		"add task fails when task already exists": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
 					IsExist:              true,
 				},
@@ -35,13 +35,13 @@ func TestAdd(t *testing.T) {
 		},
 
 		"add task fails due to repository error": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: true,
 					IsExist:              false,
 				},
 			},
-			result: repository.ErrAddingTask,
+			result: taskrepo.ErrAddingTask,
 		},
 	}
 
@@ -60,12 +60,12 @@ func TestAdd(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	tests := map[string]struct {
-		service *DefaultTaskService
+		service *DefaultService
 		result  error
 	}{
 		"successfully delete a valid task": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
 					IsExist:              true,
 				},
@@ -74,8 +74,8 @@ func TestDelete(t *testing.T) {
 		},
 
 		"delete task fails when task doesn't exist": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
 					IsExist:              false,
 				},
@@ -84,13 +84,13 @@ func TestDelete(t *testing.T) {
 		},
 
 		"delete task fails due to repository error": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: true,
 					IsExist:              true,
 				},
 			},
-			result: repository.ErrDeletingTask,
+			result: taskrepo.ErrDeletingTask,
 		},
 	}
 
@@ -109,12 +109,12 @@ func TestDelete(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	tests := map[string]struct {
-		service *DefaultTaskService
+		service *DefaultService
 		result  error
 	}{
 		"successfully get a valid task": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
 					IsExist:              true,
 				},
@@ -123,8 +123,8 @@ func TestGet(t *testing.T) {
 		},
 
 		"get task fails when task doesn't exist": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
 					IsExist:              false,
 				},
@@ -133,13 +133,13 @@ func TestGet(t *testing.T) {
 		},
 
 		"get task fails due to repository error": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: true,
 					IsExist:              true,
 				},
 			},
-			result: repository.ErrGettingTask,
+			result: taskrepo.ErrGettingTask,
 		},
 	}
 
@@ -158,12 +158,12 @@ func TestGet(t *testing.T) {
 
 func TestGetAll(t *testing.T) {
 	tests := map[string]struct {
-		service *DefaultTaskService
+		service *DefaultService
 		result  error
 	}{
 		"successfully get all tasks": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
 				},
 			},
@@ -171,12 +171,12 @@ func TestGetAll(t *testing.T) {
 		},
 
 		"get all tasks fails due to repository error": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: true,
 				},
 			},
-			result: repository.ErrGettingAllTasks,
+			result: taskrepo.ErrGettingAllTasks,
 		},
 	}
 
@@ -195,12 +195,12 @@ func TestGetAll(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	tests := map[string]struct {
-		service *DefaultTaskService
+		service *DefaultService
 		result  error
 	}{
 		"successfully update a valid task": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
 					IsExist:              true,
 				},
@@ -208,9 +208,9 @@ func TestUpdate(t *testing.T) {
 			result: nil,
 		},
 
-		"update task fails when task doesn't exist": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+		"update task fails when task does not exist": {
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: false,
 					IsExist:              false,
 				},
@@ -219,13 +219,13 @@ func TestUpdate(t *testing.T) {
 		},
 
 		"update task fails due to repository error": {
-			service: &DefaultTaskService{
-				repo: &repository.MockTaskRepository{
+			service: &DefaultService{
+				repo: &taskrepo.MockRepository{
 					ForceRepositoryError: true,
 					IsExist:              true,
 				},
 			},
-			result: repository.ErrUpdatingTask,
+			result: taskrepo.ErrUpdatingTask,
 		},
 	}
 

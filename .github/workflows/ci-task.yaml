@@ -1,0 +1,75 @@
+name: CI-task
+
+on:
+  push:
+    branches:
+      - "*"
+    paths:
+      - "go.mod"
+      - "go.sum"
+      - "docker-compose.yml"
+      - "Makefile"
+      - ".golangci.yml"
+      - "migrations/**"
+      - "docker/task/Dockerfile"
+      - "cmd/server/**"
+      - "internal/config/**"
+      - "internal/models/task.go"
+      - "internal/models/error.go"
+      - "internal/repository/task/**"
+      - "internal/server/**"
+      - "internal/service/task/**"
+      - "tests/testutils/**"
+      - "tests/httptests/task/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21.x"
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install migrate CLI
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/
+
+      - name: Build
+        run: |
+          go mod tidy
+          go build -v ./...
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+
+      - name: Start services
+        env:
+          PORT: "8080"
+        run: |
+          mkdir -p .docker/database
+          chmod 777 .docker/database
+
+          docker compose up -d postgres migrate
+      - name: Test
+        run: |
+          go test -v -race -coverprofile=coverage.txt \
+          ./internal/config/... \
+          ./internal/repository/task/... \
+          ./internal/service/task/... \
+          ./internal/server/... \
+          ./tests/httptests/task/...
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

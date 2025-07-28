@@ -1,4 +1,4 @@
-package httptests
+package task
 
 import (
 	"bytes"

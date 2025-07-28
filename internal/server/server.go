@@ -13,14 +13,14 @@ import (
 	"time"
 
 	"task-tracker/internal/config"
-	"task-tracker/internal/repository"
-	"task-tracker/internal/service"
+	taskrepo "task-tracker/internal/repository/task"
+	taskservice "task-tracker/internal/service/task"
 )
 
 type HTTPServer struct {
 	config      config.Config
 	logger      *log.Logger
-	taskService service.TaskService
+	taskService taskservice.Service
 	server      *http.Server
 	mux         *http.ServeMux
 	cancelFunc  context.CancelFunc
@@ -35,10 +35,23 @@ func NewHTTPServer(config config.Config) *HTTPServer {
 func (s *HTTPServer) setupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/tasks", s.handleTasks)
 	mux.HandleFunc("/tasks/{id}", s.handleTaskByID)
+
 	mux.HandleFunc("/swagger", s.handleSwagger)
 
+	mux.HandleFunc("/health", s.handleHealth)
+
+	mux.HandleFunc("/auth/register", s.handleAuth)
+	mux.HandleFunc("/auth/login", s.handleAuth)
+	mux.HandleFunc("/auth/refresh", s.handleAuth)
+	mux.HandleFunc("/auth/logout", s.handleAuth)
+
+	mux.HandleFunc("/users/me", s.handleUsers)
+	mux.HandleFunc("/users", s.handleUsers)
+	mux.HandleFunc("/users/{id}", s.handleUserByID)
+
 	mux.Handle("/swagger/static/", http.StripPrefix("/swagger/static/", http.FileServer(http.Dir("docs/static"))))
-	mux.Handle("/swagger/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
+	mux.Handle("/swagger/auth/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
+	mux.Handle("/swagger/task/swagger.yaml", http.StripPrefix("/swagger/", http.FileServer(http.Dir("docs"))))
 }
 
 func (s *HTTPServer) Handle(method, path string, body io.Reader, headers map[string]string) (*http.Response, error) {
@@ -62,20 +75,20 @@ func (s *HTTPServer) Handle(method, path string, body io.Reader, headers map[str
 }
 
 func (s *HTTPServer) ConfigureServer(ctx context.Context) error {
-	pool, err := repository.CreateDBPool(ctx, s.config.DBConn)
+	pool, err := taskrepo.CreateDBPool(ctx, s.config.DBConn)
 	if err != nil {
 		return err
 	}
 
-	var repo repository.TaskRepository
+	var repo taskrepo.Repository
 
 	if s.config.InMemory == "True" {
-		repo = repository.NewMemoryTaskRepository()
+		repo = taskrepo.NewMemoryRepository()
 	} else {
-		repo = repository.NewPostgresTaskRepository(pool)
+		repo = taskrepo.NewPostgresRepository(pool)
 	}
 
-	s.taskService = service.NewDefaultTaskService(repo)
+	s.taskService = taskservice.NewDefaultService(repo)
 	s.logger = log.New(os.Stdout, "[HTTP Server] ", log.LstdFlags)
 
 	s.mux = http.NewServeMux()

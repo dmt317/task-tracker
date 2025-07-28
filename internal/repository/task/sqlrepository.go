@@ -1,4 +1,4 @@
-package repository
+package task
 
 import (
 	"context"
@@ -10,12 +10,12 @@ import (
 	"task-tracker/internal/models"
 )
 
-type PostgresTaskRepository struct {
+type PostgresRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewPostgresTaskRepository(db *pgxpool.Pool) *PostgresTaskRepository {
-	return &PostgresTaskRepository{
+func NewPostgresRepository(db *pgxpool.Pool) *PostgresRepository {
+	return &PostgresRepository{
 		db: db,
 	}
 }
@@ -34,7 +34,7 @@ func CreateDBPool(ctx context.Context, connString string) (*pgxpool.Pool, error)
 	return pool, nil
 }
 
-func (repo *PostgresTaskRepository) Add(ctx context.Context, task *models.Task) error {
+func (repo *PostgresRepository) Add(ctx context.Context, task *models.Task) error {
 	query := `INSERT INTO tasks (id, title, description, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`
 	_, err := repo.db.Exec(
 		ctx,
@@ -54,7 +54,7 @@ func (repo *PostgresTaskRepository) Add(ctx context.Context, task *models.Task) 
 	return nil
 }
 
-func (repo *PostgresTaskRepository) Delete(ctx context.Context, id string) error {
+func (repo *PostgresRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM tasks WHERE id=$1`
 	_, err := repo.db.Exec(ctx, query, id)
 
@@ -65,7 +65,7 @@ func (repo *PostgresTaskRepository) Delete(ctx context.Context, id string) error
 	return nil
 }
 
-func (repo *PostgresTaskRepository) Exists(ctx context.Context, id string) (bool, error) {
+func (repo *PostgresRepository) Exists(ctx context.Context, id string) (bool, error) {
 	var exists bool
 
 	query := `SELECT EXISTS(SELECT 1 FROM tasks WHERE id=$1)`
@@ -78,7 +78,7 @@ func (repo *PostgresTaskRepository) Exists(ctx context.Context, id string) (bool
 	return exists, nil
 }
 
-func (repo *PostgresTaskRepository) Get(ctx context.Context, id string) (models.Task, error) {
+func (repo *PostgresRepository) Get(ctx context.Context, id string) (models.Task, error) {
 	var task models.Task
 
 	query := `SELECT id, title, description, status, created_at, updated_at FROM tasks WHERE id=$1`
@@ -98,7 +98,7 @@ func (repo *PostgresTaskRepository) Get(ctx context.Context, id string) (models.
 	return task, nil
 }
 
-func (repo *PostgresTaskRepository) GetAll(ctx context.Context) ([]models.Task, error) {
+func (repo *PostgresRepository) GetAll(ctx context.Context) ([]models.Task, error) {
 	query := `SELECT id, title, description, status, created_at, updated_at FROM tasks`
 	rows, err := repo.db.Query(ctx, query)
 
@@ -135,7 +135,7 @@ func (repo *PostgresTaskRepository) GetAll(ctx context.Context) ([]models.Task, 
 	return tasks, nil
 }
 
-func (repo *PostgresTaskRepository) Update(ctx context.Context, updatedTask *models.Task) error {
+func (repo *PostgresRepository) Update(ctx context.Context, updatedTask *models.Task) error {
 	query := `UPDATE tasks SET title=$1, description=$2, status=$3, updated_at=$4 WHERE id=$5`
 	updatedTask.UpdatedAt = time.Now().Format(time.RFC3339Nano)
 	_, err := repo.db.Exec(

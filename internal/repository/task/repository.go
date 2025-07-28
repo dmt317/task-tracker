@@ -1,4 +1,4 @@
-package repository
+package task
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"task-tracker/internal/models"
 )
 
-type TaskRepository interface {
+type Repository interface {
 	Add(ctx context.Context, task *models.Task) error
 	Delete(ctx context.Context, id string) error
 	Exists(ctx context.Context, id string) (bool, error)

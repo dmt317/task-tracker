@@ -1,0 +1,414 @@
+openapi: 3.0.4
+info:
+  title: Auth Service API
+  description: |
+    This API provides endpoints for user authentication and management.
+
+    It allows users to register, log in, refresh tokens, log out, and retrieve user profile information.
+
+    Additionally, it includes admin-only endpoints for managing users, including listing all users, retrieving, updating roles, and deleting users.
+
+    The API uses JWT for secure access control and role-based authorization.
+  version: 1.0.0
+
+tags:
+- name: Auth
+  description: Authentication endpoints
+- name: Users
+  description: Endpoints for working with the current user
+- name: Admin
+  description: Admin-only operations
+
+servers:
+- url: "http://localhost:5001"
+- url: "http://51.250.99.81:5001"
+
+paths:
+  /auth/register:
+    post:
+      tags:
+      - Auth
+      operationId: registerUser
+      summary: Registers a new user.
+      description: Registers a new user with a unique username and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCredentialsRequest"
+            example:
+              username: "username"
+              password: "password"
+      responses:
+        "201":
+          description: User successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCredentialsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /auth/login:
+    post:
+      tags:
+      - Auth
+      operationId: loginUser
+      summary: Logs in a user and obtain JWT tokens.
+      description: |
+        Authenticates a user using a username and password.
+
+        On successful authentication, returns a pair of JSON Web Tokens (JWT):  
+        - `access_token` — short-lived token for accessing protected resources  
+        - `refresh_token` — long-lived token used to refresh the access token
+
+        If credentials are invalid or the user is not found, appropriate error responses are returned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCredentialsRequest"
+            example:
+              username: "username"
+              password: "password"
+      responses:
+        "200":
+          description: Successful authentication. Returns JWT tokens.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokensResponse"
+              example:
+                access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                refresh_token: "d8f3bd9f-e123-4b9f-9f61-35a5f8be8892"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /auth/refresh:
+    post:
+      tags:
+      - Auth
+      operationId: refreshToken
+      summary: Refreshes access token.
+      description: |
+        Issues a new access token using a valid refresh token.
+
+        The client must provide a valid, non-expired `refresh_token`.  
+        If the token is found in the database and is still valid, new access token (and maybe a new refresh token) is returned.
+
+        If the token is invalid, expired, or not found, an appropriate error is returned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object 
+              properties:
+                refresh_token: 
+                  type: string 
+            example:
+              refresh_token: "d8f3bd9f-e123-4b9f-9f61-35a5f8be8892"
+      responses:
+        "200":
+          description: New token pair issued successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokensResponse"
+              example:
+                access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                refresh_token: "a7f9b890-912a-4c2a-882b-127439c1db8f"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /auth/logout:
+    post:
+      tags:
+      - Auth
+      operationId: logoutUser
+      summary: Logs out the user and invalidate the refresh token.
+      description: |
+        Logs the user out by invalidating the provided `refresh_token`.
+
+        The token is removed from the database and can no longer be used to obtain new access tokens.
+
+        This endpoint is useful when the user logs out manually or when the session should be terminated.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object 
+              properties:
+                refresh_token: 
+                  type: string 
+            example:
+              refresh_token: "d8f3bd9f-e123-4b9f-9f61-35a5f8be8892"
+      responses:
+        "204":
+          description: Token successfully invalidated. No content is returned.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/me:
+    get:
+      tags:
+      - Users
+      operationId: getCurrentUser
+      summary: Gets current authenticated user.
+      description: |
+        Returns the profile of the currently authenticated user.
+
+        This endpoint requires a valid `access_token` to be provided in the `Authorization` header:
+
+        The response contains basic information about the user, excluding sensitive fields.
+      security:
+      - bearerAuth: []
+      responses:
+        "200":
+          description: User profile retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCredentialsResponse"
+              example:
+                id: "b6c8e8e0-7a35-11ee-b962-0242ac120002"
+                username: "username"
+                role: "user"
+                created_at: "created_at"
+                updated_at: "updated_at"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users:
+    get:
+      tags:
+      - Admin
+      operationId: listUsers
+      summary: Gets list of all users.
+      description: Returns a list of all users in the system. Requires an access token with admin role.
+      security:
+      - bearerAuth: []
+      responses:
+        "200":
+          description: Successful response with a list of users.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserCredentialsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/{id}:
+    get:
+      tags:
+      - Admin
+      operationId: getUserById
+      summary: Gets user by ID.
+      description: Returns user information by user ID. Requires admin access.
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: UUID of the user
+        schema:
+          type: string
+      responses:
+        "200":
+          description: User information returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCredentialsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+      - Admin
+      operationId: updateUser
+      summary: Updates user role by ID.
+      description: Updates the role of a user. Only `role` can be changed. Requires admin access.
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: UUID of the user
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  description: New role for the user (e.g., "user", "admin")
+                  example: "admin"
+      responses:
+        "200":
+          description: User role updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCredentialsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+      - Admin
+      operationId: deleteUser
+      summary: Deletes user by ID.
+      description: Deletes a user by their ID. Requires admin access.
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: UUID of the user
+        schema:
+          type: string
+      responses:
+        "204":
+          description: User deleted successfully. No content returned.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  schemas:
+    UserCredentialsRequest:
+      type: object
+      description: Credentials used for user authentication or registration.
+      properties:
+        username:
+          type: string
+          description: Unique username for the new user.
+          example: "username"
+        password:
+          type: string
+          description: Raw password (will be hashed before storage).
+          example: "password"
+    UserCredentialsResponse:
+      type: object
+      description: Response schema returned after a successful user registration or when retrieving the user's profile information.
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the user (UUID)
+          example: "id"
+        username:
+          type: string
+          description: Unique username of the user
+          example: "username"
+        role:
+          type: string
+          description: Role assigned to the user (e.g., admin, user)
+          example: "user"
+        created_at:
+          type: string
+          description: The date and time when the user was created in ISO 8601 format (e.g., 2025-04-09T18:21:41.935898+10:00).
+          example: "created_at"
+        updated_at:
+          type: string
+          description: The date and time when the user was last modified in ISO 8601 format (e.g., 2025-04-09T18:21:41.935898+10:00).
+          example: "updated_at"
+    TokensResponse:
+      type: object
+      description: A pair of JWT tokens returned after successful login.
+      properties:
+        access_token:
+          type: string
+          description: Short-lived access token used to authenticate requests.
+          example: "access_token"
+        refresh_token:
+          type: string
+          description: Long-lived refresh token used to obtain new access tokens.
+          example: "refresh_token"
+
+  responses:
+    BadRequest:
+      description: Bad Request. The server could not process the request due to invalid input. This may include missing required fields, incorrect data types, or malformed JSON. The response body contains a plain text explanation of the error.
+      content:
+        text/plain; charset=utf-8:
+          schema:
+            type: string
+    InternalServerError:
+      description: Internal Server Error. An unexpected error occurred on the server side. The response body contains a plain text explanation of the error.
+      content:
+        text/plain; charset=utf-8:
+          schema:
+            type: string
+    NotFound:
+      description: Not Found. The requested resource could not be found. This means that a user with the specified username or ID does not exist. The response body contains a plain text explanation of the error.
+      content:
+        text/plain; charset=utf-8:
+          schema:
+            type: string
+    Unauthorized:
+      description: Unauthorized. Authentication failed or missing credentials. This means the provided token is invalid, expired, or missing. The response body contains a plain text explanation of the error.
+      content:
+        text/plain; charset=utf-8:
+          schema:
+            type: string
+    Forbidden:
+      description: Forbidden. User does not have admin privileges.
+      content:
+        text/plain; charset=utf-8:
+          schema:
+            type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -9,18 +9,18 @@ import (
 	"testing"
 
 	"task-tracker/internal/config"
-	"task-tracker/internal/service"
+	taskservice "task-tracker/internal/service/task"
 )
 
 func TestHandler_CreateTask(t *testing.T) {
 	tests := map[string]struct {
 		requestBody    string
-		mockSetup      *service.TaskServiceMock
+		mockSetup      *taskservice.ServiceMock
 		expectedStatus int
 	}{
 		"success": {
 			requestBody: `{"title":"title", "description":"description", "status":"todo"}`,
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusCreated,
@@ -28,7 +28,7 @@ func TestHandler_CreateTask(t *testing.T) {
 
 		"bad request on invalid json": {
 			requestBody: `{"title":"title"}`,
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -36,7 +36,7 @@ func TestHandler_CreateTask(t *testing.T) {
 
 		"conflict on task already exists": {
 			requestBody: `{"title":"existing", "description":"description", "status":"todo"}`,
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusConflict,
@@ -44,7 +44,7 @@ func TestHandler_CreateTask(t *testing.T) {
 
 		"internal server error on service failure": {
 			requestBody: `{"title":"title", "description":"description", "status":"todo"}`,
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: true,
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -77,20 +77,20 @@ func TestHandler_CreateTask(t *testing.T) {
 func TestHandler_DeleteTask(t *testing.T) {
 	tests := map[string]struct {
 		taskID         string
-		mockSetup      *service.TaskServiceMock
+		mockSetup      *taskservice.ServiceMock
 		expectedStatus int
 	}{
 		"success": {
 			taskID: "task1",
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusNoContent,
 		},
 
 		"not found": {
-			taskID: service.NotFound,
-			mockSetup: &service.TaskServiceMock{
+			taskID: taskservice.NotFound,
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusNotFound,
@@ -98,7 +98,7 @@ func TestHandler_DeleteTask(t *testing.T) {
 
 		"internal server error on service failure": {
 			taskID: "task1",
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: true,
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -132,20 +132,20 @@ func TestHandler_DeleteTask(t *testing.T) {
 func TestHandler_GetTask(t *testing.T) {
 	tests := map[string]struct {
 		taskID         string
-		mockSetup      *service.TaskServiceMock
+		mockSetup      *taskservice.ServiceMock
 		expectedStatus int
 	}{
 		"success": {
 			taskID: "task1",
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusOK,
 		},
 
 		"not found": {
-			taskID: service.NotFound,
-			mockSetup: &service.TaskServiceMock{
+			taskID: taskservice.NotFound,
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusNotFound,
@@ -153,7 +153,7 @@ func TestHandler_GetTask(t *testing.T) {
 
 		"internal server error on service failure": {
 			taskID: "task1",
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: true,
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -186,18 +186,18 @@ func TestHandler_GetTask(t *testing.T) {
 
 func TestHandler_GetAllTasks(t *testing.T) {
 	tests := map[string]struct {
-		mockSetup      *service.TaskServiceMock
+		mockSetup      *taskservice.ServiceMock
 		expectedStatus int
 	}{
 		"success": {
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusOK,
 		},
 
 		"internal server error on service failure": {
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: true,
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -230,13 +230,13 @@ func TestHandler_UpdateTask(t *testing.T) {
 	tests := map[string]struct {
 		taskID         string
 		requestBody    string
-		mockSetup      *service.TaskServiceMock
+		mockSetup      *taskservice.ServiceMock
 		expectedStatus int
 	}{
 		"success": {
 			taskID:      "task1",
 			requestBody: `{"title":"title", "description":"description", "status":"todo"}`,
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusNoContent,
@@ -245,16 +245,16 @@ func TestHandler_UpdateTask(t *testing.T) {
 		"bad request on invalid json": {
 			taskID:      "task1",
 			requestBody: `{"title":"title"}`,
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusBadRequest,
 		},
 
 		"not found": {
-			taskID:      service.NotFound,
+			taskID:      taskservice.NotFound,
 			requestBody: `{"title":"title", "description":"description", "status":"todo"}`,
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: false,
 			},
 			expectedStatus: http.StatusNotFound,
@@ -263,7 +263,7 @@ func TestHandler_UpdateTask(t *testing.T) {
 		"interval server error": {
 			taskID:      "task1",
 			requestBody: `{"title":"title", "description":"description", "status":"todo"}`,
-			mockSetup: &service.TaskServiceMock{
+			mockSetup: &taskservice.ServiceMock{
 				ForceInternalError: true,
 			},
 			expectedStatus: http.StatusInternalServerError,
