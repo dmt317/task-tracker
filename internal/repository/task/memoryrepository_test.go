@@ -1,4 +1,4 @@
-package repository
+package task
 
 import (
 	"context"
@@ -23,7 +23,7 @@ type TestResultGetAll struct {
 func TestStorage_Add(t *testing.T) {
 	tests := map[string]struct {
 		inputTasks []*models.Task
-		storage    *MemoryTaskRepository
+		storage    *MemoryRepository
 		result     []error
 	}{
 		"add valid task": {
@@ -35,7 +35,7 @@ func TestStorage_Add(t *testing.T) {
 					Status:      "Todo",
 				},
 			},
-			storage: NewMemoryTaskRepository(),
+			storage: NewMemoryRepository(),
 			result:  []error{nil},
 		},
 
@@ -48,7 +48,7 @@ func TestStorage_Add(t *testing.T) {
 					Status:      "Todo",
 				},
 			},
-			storage: NewMemoryTaskRepository(),
+			storage: NewMemoryRepository(),
 			result:  []error{nil},
 		},
 
@@ -73,7 +73,7 @@ func TestStorage_Add(t *testing.T) {
 					Status:      "Todo",
 				},
 			},
-			storage: NewMemoryTaskRepository(),
+			storage: NewMemoryRepository(),
 			result:  []error{nil, nil, nil},
 		},
 	}
@@ -110,12 +110,12 @@ func TestStorage_Get(t *testing.T) {
 
 	tests := map[string]struct {
 		inputIDs []string
-		storage  *MemoryTaskRepository
+		storage  *MemoryRepository
 		result   TestResultGet
 	}{
 		"get existing task": {
 			inputIDs: []string{"task1"},
-			storage: &MemoryTaskRepository{
+			storage: &MemoryRepository{
 				store: map[string]models.Task{
 					"task1": {
 						ID:          "task1",
@@ -142,7 +142,7 @@ func TestStorage_Get(t *testing.T) {
 
 		"get multiple tasks with duplicates": {
 			inputIDs: []string{"task1", "task2", "task3", "task1", "task2", "task3"},
-			storage: &MemoryTaskRepository{
+			storage: &MemoryRepository{
 				store: map[string]models.Task{
 					"task1": {
 						ID:          "task1",
@@ -245,7 +245,7 @@ func TestStorage_Get(t *testing.T) {
 func TestStorage_Update(t *testing.T) {
 	tests := map[string]struct {
 		inputTasks []*models.Task
-		storage    *MemoryTaskRepository
+		storage    *MemoryRepository
 		result     []error
 	}{
 		"update existing task": {
@@ -257,7 +257,7 @@ func TestStorage_Update(t *testing.T) {
 					Status:      "Done",
 				},
 			},
-			storage: &MemoryTaskRepository{
+			storage: &MemoryRepository{
 				store: map[string]models.Task{
 					"task1": {
 						ID:          "task1",
@@ -293,7 +293,7 @@ func TestStorage_Update(t *testing.T) {
 					Status:      "Done",
 				},
 			},
-			storage: &MemoryTaskRepository{
+			storage: &MemoryRepository{
 				store: map[string]models.Task{
 					"task1": {
 						ID:          "task1",
@@ -333,7 +333,7 @@ func TestStorage_Update(t *testing.T) {
 					Status:      "Todo",
 				},
 			},
-			storage: &MemoryTaskRepository{
+			storage: &MemoryRepository{
 				store: map[string]models.Task{
 					"task1": {
 						ID:          "task1",
@@ -383,12 +383,12 @@ func TestStorage_Update(t *testing.T) {
 func TestStorage_Delete(t *testing.T) {
 	tests := map[string]struct {
 		inputIDs []string
-		storage  *MemoryTaskRepository
+		storage  *MemoryRepository
 		result   []error
 	}{
 		"delete existing task": {
 			inputIDs: []string{"task1"},
-			storage: &MemoryTaskRepository{
+			storage: &MemoryRepository{
 				store: map[string]models.Task{
 					"task1": {
 						ID:          "task1",
@@ -405,7 +405,7 @@ func TestStorage_Delete(t *testing.T) {
 
 		"delete multiple tasks": {
 			inputIDs: []string{"task1", "task2"},
-			storage: &MemoryTaskRepository{
+			storage: &MemoryRepository{
 				store: map[string]models.Task{
 					"task1": {
 						ID:          "task1",
@@ -460,11 +460,11 @@ func TestStorage_GetAll(t *testing.T) {
 	fixedTime := time.Now().Format(time.RFC3339Nano)
 
 	tests := map[string]struct {
-		storage *MemoryTaskRepository
+		storage *MemoryRepository
 		result  TestResultGetAll
 	}{
 		"get all tasks when storage has multiple tasks": {
-			storage: &MemoryTaskRepository{
+			storage: &MemoryRepository{
 				store: map[string]models.Task{
 					"task1": {
 						ID:          "task1",
@@ -524,7 +524,7 @@ func TestStorage_GetAll(t *testing.T) {
 		},
 
 		"get all tasks when storage is empty": {
-			storage: NewMemoryTaskRepository(),
+			storage: NewMemoryRepository(),
 			result: TestResultGetAll{
 				resultTasks: []models.Task{},
 				resultError: nil,
@@ -532,7 +532,7 @@ func TestStorage_GetAll(t *testing.T) {
 		},
 
 		"get all tasks when storage has one task": {
-			storage: &MemoryTaskRepository{
+			storage: &MemoryRepository{
 				store: map[string]models.Task{
 					"task1": {
 						ID:          "task1",

@@ -1,10 +1,16 @@
 .PHONY: build, run, test, lint
 
 build:
-	go build -o bin/main cmd/server/main.go
+	go build -o bin/app cmd/server/main.go
+
+build-auth:
+	go build -o bin/auth cmd/auth/main.go
 
 run: build
-	./bin/main
+	./bin/app
+
+run-auth: build-auth
+	./bin/auth
 
 test:
 	docker-compose up --build -d postgres migrate

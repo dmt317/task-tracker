@@ -58,7 +58,7 @@ func runMigrations(t *testing.T, dbName string) {
 	t.Helper()
 
 	conn := fmt.Sprintf("postgres://postgres:postgres@localhost:5432/%s?sslmode=disable", dbName)
-	cmd := exec.Command("migrate", "-path", "../../migrations", "-database", conn, "up")
+	cmd := exec.Command("migrate", "-path", "../../../migrations", "-database", conn, "up")
 
 	output, err := cmd.CombinedOutput()
 

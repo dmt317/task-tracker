@@ -1,4 +1,4 @@
-package repository
+package task
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"task-tracker/internal/models"
 )
 
-type MockTaskRepository struct {
+type MockRepository struct {
 	ForceRepositoryError bool
 	IsExist              bool
 }
@@ -20,7 +20,7 @@ var (
 	ErrUpdatingTask    = fmt.Errorf("error updating task")
 )
 
-func (repo *MockTaskRepository) Add(_ context.Context, _ *models.Task) error {
+func (repo *MockRepository) Add(_ context.Context, _ *models.Task) error {
 	if repo.ForceRepositoryError {
 		return ErrAddingTask
 	}
@@ -28,7 +28,7 @@ func (repo *MockTaskRepository) Add(_ context.Context, _ *models.Task) error {
 	return nil
 }
 
-func (repo *MockTaskRepository) Delete(_ context.Context, _ string) error {
+func (repo *MockRepository) Delete(_ context.Context, _ string) error {
 	if repo.ForceRepositoryError {
 		return ErrDeletingTask
 	}
@@ -36,11 +36,11 @@ func (repo *MockTaskRepository) Delete(_ context.Context, _ string) error {
 	return nil
 }
 
-func (repo *MockTaskRepository) Exists(_ context.Context, _ string) (bool, error) {
+func (repo *MockRepository) Exists(_ context.Context, _ string) (bool, error) {
 	return repo.IsExist, nil
 }
 
-func (repo *MockTaskRepository) Get(_ context.Context, id string) (models.Task, error) {
+func (repo *MockRepository) Get(_ context.Context, id string) (models.Task, error) {
 	if repo.ForceRepositoryError {
 		return models.Task{}, ErrGettingTask
 	}
@@ -48,7 +48,7 @@ func (repo *MockTaskRepository) Get(_ context.Context, id string) (models.Task, 
 	return models.Task{ID: id, Title: "Mock Task"}, nil
 }
 
-func (repo *MockTaskRepository) GetAll(_ context.Context) ([]models.Task, error) {
+func (repo *MockRepository) GetAll(_ context.Context) ([]models.Task, error) {
 	if repo.ForceRepositoryError {
 		return []models.Task{}, ErrGettingAllTasks
 	}
@@ -56,7 +56,7 @@ func (repo *MockTaskRepository) GetAll(_ context.Context) ([]models.Task, error)
 	return []models.Task{{ID: "task1", Title: "Mock Task"}}, nil
 }
 
-func (repo *MockTaskRepository) Update(_ context.Context, _ *models.Task) error {
+func (repo *MockRepository) Update(_ context.Context, _ *models.Task) error {
 	if repo.ForceRepositoryError {
 		return ErrUpdatingTask
 	}

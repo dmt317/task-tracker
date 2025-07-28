@@ -1,4 +1,4 @@
-package repository
+package task
 
 import (
 	"context"
@@ -8,18 +8,18 @@ import (
 	"task-tracker/internal/models"
 )
 
-type MemoryTaskRepository struct {
+type MemoryRepository struct {
 	store map[string]models.Task
 	mu    sync.Mutex
 }
 
-func NewMemoryTaskRepository() *MemoryTaskRepository {
-	return &MemoryTaskRepository{
+func NewMemoryRepository() *MemoryRepository {
+	return &MemoryRepository{
 		store: make(map[string]models.Task),
 	}
 }
 
-func (repo *MemoryTaskRepository) Add(_ context.Context, task *models.Task) error {
+func (repo *MemoryRepository) Add(_ context.Context, task *models.Task) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -28,7 +28,7 @@ func (repo *MemoryTaskRepository) Add(_ context.Context, task *models.Task) erro
 	return nil
 }
 
-func (repo *MemoryTaskRepository) Delete(_ context.Context, id string) error {
+func (repo *MemoryRepository) Delete(_ context.Context, id string) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -37,7 +37,7 @@ func (repo *MemoryTaskRepository) Delete(_ context.Context, id string) error {
 	return nil
 }
 
-func (repo *MemoryTaskRepository) Exists(_ context.Context, id string) (bool, error) {
+func (repo *MemoryRepository) Exists(_ context.Context, id string) (bool, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -46,7 +46,7 @@ func (repo *MemoryTaskRepository) Exists(_ context.Context, id string) (bool, er
 	return found, nil
 }
 
-func (repo *MemoryTaskRepository) Get(_ context.Context, id string) (models.Task, error) {
+func (repo *MemoryRepository) Get(_ context.Context, id string) (models.Task, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -55,7 +55,7 @@ func (repo *MemoryTaskRepository) Get(_ context.Context, id string) (models.Task
 	return task, nil
 }
 
-func (repo *MemoryTaskRepository) GetAll(_ context.Context) ([]models.Task, error) {
+func (repo *MemoryRepository) GetAll(_ context.Context) ([]models.Task, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -70,7 +70,7 @@ func (repo *MemoryTaskRepository) GetAll(_ context.Context) ([]models.Task, erro
 	return tasks, nil
 }
 
-func (repo *MemoryTaskRepository) Update(_ context.Context, updatedTask *models.Task) error {
+func (repo *MemoryRepository) Update(_ context.Context, updatedTask *models.Task) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 

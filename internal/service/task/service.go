@@ -1,4 +1,4 @@
-package service
+package task
 
 import (
 	"context"
@@ -7,10 +7,10 @@ import (
 	"github.com/google/uuid"
 
 	"task-tracker/internal/models"
-	"task-tracker/internal/repository"
+	taskrepo "task-tracker/internal/repository/task"
 )
 
-type TaskService interface {
+type Service interface {
 	Add(ctx context.Context, task *models.Task) error
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (models.Task, error)
@@ -18,17 +18,17 @@ type TaskService interface {
 	Update(ctx context.Context, updatedTask *models.Task) error
 }
 
-type DefaultTaskService struct {
-	repo repository.TaskRepository
+type DefaultService struct {
+	repo taskrepo.Repository
 }
 
-func NewDefaultTaskService(repo repository.TaskRepository) *DefaultTaskService {
-	return &DefaultTaskService{
+func NewDefaultService(repo taskrepo.Repository) *DefaultService {
+	return &DefaultService{
 		repo: repo,
 	}
 }
 
-func (s *DefaultTaskService) Add(ctx context.Context, task *models.Task) error {
+func (s *DefaultService) Add(ctx context.Context, task *models.Task) error {
 	if exists, _ := s.repo.Exists(ctx, task.ID); exists {
 		return models.ErrTaskExists
 	}
@@ -40,7 +40,7 @@ func (s *DefaultTaskService) Add(ctx context.Context, task *models.Task) error {
 	return s.repo.Add(ctx, task)
 }
 
-func (s *DefaultTaskService) Delete(ctx context.Context, id string) error {
+func (s *DefaultService) Delete(ctx context.Context, id string) error {
 	if exists, _ := s.repo.Exists(ctx, id); !exists {
 		return models.ErrTaskNotFound
 	}
@@ -48,7 +48,7 @@ func (s *DefaultTaskService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *DefaultTaskService) Get(ctx context.Context, id string) (models.Task, error) {
+func (s *DefaultService) Get(ctx context.Context, id string) (models.Task, error) {
 	if exists, _ := s.repo.Exists(ctx, id); !exists {
 		return models.Task{}, models.ErrTaskNotFound
 	}
@@ -56,11 +56,11 @@ func (s *DefaultTaskService) Get(ctx context.Context, id string) (models.Task, e
 	return s.repo.Get(ctx, id)
 }
 
-func (s *DefaultTaskService) GetAll(ctx context.Context) ([]models.Task, error) {
+func (s *DefaultService) GetAll(ctx context.Context) ([]models.Task, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *DefaultTaskService) Update(ctx context.Context, updatedTask *models.Task) error {
+func (s *DefaultService) Update(ctx context.Context, updatedTask *models.Task) error {
 	if exists, _ := s.repo.Exists(ctx, updatedTask.ID); !exists {
 		return models.ErrTaskNotFound
 	}

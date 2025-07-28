@@ -5,7 +5,7 @@ window.onload = function() {
   window.ui = SwaggerUIBundle({
     urls: [
       { name: "Auth Service API", url: "/swagger/auth/swagger.yaml" },
-      { name: "Task Tracker API", url: "/swagger/tasks/swagger.yaml" }
+      { name: "Task Tracker API", url: "/swagger/task/swagger.yaml" }
     ],
     dom_id: '#swagger-ui',
     deepLinking: true,

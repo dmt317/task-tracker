@@ -45,7 +45,7 @@ services:
     container_name: tasktracker
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/task/Dockerfile
     restart: always
     depends_on:
       migrate:
@@ -54,5 +54,19 @@ services:
       - main
     ports:
       - "${PORT}:${PORT}"
+    env_file:
+      - .env
+
+  auth:
+    container_name: auth
+    build:
+      context: .
+      dockerfile: docker/auth/Dockerfile
+    restart: always
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - main
     env_file:
       - .env
