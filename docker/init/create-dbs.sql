@@ -1,0 +1,2 @@
+CREATE DATABASE tasktracker;
+CREATE DATABASE auth;
